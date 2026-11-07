@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>隨身旅遊行程 App</title>
+    <!-- PWA / 加入主畫面設定 -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="旅遊行程">
+    <meta name="theme-color" content="#0f172a">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: #0f172a;
+            -webkit-tap-highlight-color: transparent;
+        }
+        /* 隱藏水平捲軸但保留滑動功能 */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        /* 時間軸直線 */
+        .timeline-line::before {
+            content: '';
+            position: absolute;
+            top: 24px;
+            bottom: -16px;
+            left: 19px;
+            width: 2px;
+            background: #e2e8f0;
+            z-index: 0;
+        }
+        .timeline-item:last-child .timeline-line::before {
+            display: none;
+        }
+    </style>
+</head>
+<body class="text-slate-800 antialiased selection:bg-indigo-500 selection:text-white">
+
+    <!-- 手機外框容器（在電腦上看會置中像一支手機，在手機上看會滿版） -->
+    <div class="max-w-md mx-auto bg-slate-50 min-h-screen flex flex-col relative shadow-2xl overflow-x-hidden">
+
+        <!-- 頂部固定導覽列 -->
+        <header class="sticky top-0 z-30 bg-slate-900 text-white shadow-lg">
+            <div class="px-4 pt-4 pb-3">
+                <div class="flex items-start justify-between gap-2">
+                    <div class="flex-1 min-w-0 cursor-pointer group" onclick="openTripSettingsModal()">
+                        <div class="flex items-center gap-2">
+                            <h1 id="tripTitleDisplay" class="text-lg font-bold truncate group-hover:text-indigo-300 transition-colors">
+                                2026 關西賞楓自由行 🍁
+                            </h1>
+                            <i class="fa-solid fa-pen text-xs text-slate-400 group-hover:text-indigo-300"></i>
+                        </div>
+                        <p id="tripSubtitleDisplay" class="text-xs text-slate-300 mt-0.5 truncate">
+                            大阪・京都 5天4夜 ｜ 點擊標題可修改名稱
+                        </p>
+                    </div>
+                    <!-- 右上角工具按鈕 -->
+                    <div class="flex items-center gap-1.5 shrink-0">
+                        <button onclick="openDayManagerModal()" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium flex items-center gap-1 border border-slate-700 transition active:scale-95" title="管理天數">
+                            <i class="fa-regular fa-calendar-days text-indigo-400"></i>
+                            <span>天數</span>
+                        </button>
+                        <button onclick="openSyncModal()" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium flex items-center gap-1 border border-slate-700 transition active:scale-95" title="備份與同步">
+                            <i class="fa-solid fa-cloud-arrow-up text-emerald-400"></i>
+                            <span>備份/同步</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 搜尋與分類快速篩選 -->
+                <div class="mt-3 flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5" id="categoryFilterBar">
+                    <!-- 由 JS 動態生成篩選按鈕 -->
+                </div>
+            </div>
+
+            <!-- 天數水平切換 Tabs -->
+            <div class="bg-slate-800/90 border-t border-slate-700/80 px-2 py-2 flex items-center gap-2 overflow-x-auto no-scrollbar" id="dayTabsContainer">
+                <!-- 由 JS 動態生成 Day Tabs -->
+            </div>
+        </header>
+
+        <!-- 當日主題資訊列 -->
+        <div class="bg-indigo-50/80 border-b border-indigo-100 px-4 py-2.5 flex items-center justify-between">
+            <div class="flex items-center gap-2 min-w-0">
+                <span id="currentDayBadge" class="px-2 py-0.5 text-xs font-bold bg-indigo-600 text-white rounded-md shrink-0">Day 1</span>
+                <span id="currentDayTheme" class="text-sm font-semibold text-slate-700 truncate">抵達關西・心齋橋周邊探索</span>
+            </div>
+            <button onclick="openDayManagerModal()" class="text-xs text-indigo-600 hover:text-indigo-800 font-medium shrink-0 ml-2">
+                編輯當日主題
+            </button>
+        </div>
+
+        <!-- 行程卡片列表區 -->
+        <main class="flex-1 px-4 py-4 pb-28" id="itineraryListContainer">
+            <!-- 由 JS 動態生成行程卡片 -->
+        </main>
+
+        <!-- 底部懸浮新增按鈕列 -->
+        <div class="fixed bottom-0 left-0 right-0 z-20 pointer-events-none">
+            <div class="max-w-md mx-auto px-4 pb-5 pt-2 bg-gradient-to-t from-slate-50 via-slate-50/90 to-transparent flex items-center justify-between gap-3 pointer-events-auto">
+                <button onclick="openItemModal()" class="w-full py-3.5 px-6 rounded-2xl bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white font-bold text-sm shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 transition transform active:scale-98">
+                    <i class="fa-solid fa-plus text-base"></i>
+                    <span>新增這天的行程 / 餐廳 / 交通</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Toast 訊息提示框 -->
+        <div id="toastMessage" class="fixed top-16 left-1/2 -translate-x-1/2 z-50 hidden bg-slate-900/95 text-white px-4 py-2.5 rounded-xl shadow-xl text-xs font-medium flex items-center gap-2 border border-slate-700 transition-all">
+            <i class="fa-solid fa-circle-check text-emerald-400"></i>
+            <span id="toastText">已儲存變更</span>
+        </div>
+
+    </div>
+
+    <!-- ==========================================
+         Modal 1: 新增 / 編輯行程項目
+    =========================================== -->
+    <div id="itemModal" class="fixed inset-0 z-40 hidden bg-slate-900/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-2xl shadow-2xl max-h-[90vh] flex flex-col overflow-hidden animate-slide-up">
+            <!-- Modal Header -->
+            <div class="px-5 py-4 bg-slate-900 text-white flex items-center justify-between">
+                <h3 id="itemModalTitle" class="text-base font-bold flex items-center gap-2">
+                    <i class="fa-solid fa-location-dot text-indigo-400"></i>
+                    <span>新增行程項目</span>
+                </h3>
+                <button onclick="closeItemModal()" class="w-8 h-8 rounded-full bg-slate-800 text-slate-300 hover:text-white flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Modal Body (Form) -->
+            <form id="itemForm" onsubmit="saveItineraryItem(event)" class="p-5 overflow-y-auto space-y-4 text-sm flex-1">
+                <input type="hidden" id="itemId">
+
+                <div class="grid grid-cols-2 gap-3">
+                    <!-- 天數選擇 -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">所屬天數 *</label>
+                        <select id="itemDaySelect" required class="w-full rounded-xl border border-slate-300 px-3 py-2.5 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium"></select>
+                    </div>
+                    <!-- 時間選擇 -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">預計時間 *</label>
+                        <input type="time" id="itemTime" required class="w-full rounded-xl border border-slate-300 px-3 py-2 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium">
+                    </div>
+                </div>
+
+                <!-- 類別選擇 -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1.5">行程類別 *</label>
+                    <div class="grid grid-cols-5 gap-1.5" id="categoryRadioGroup">
+                        <label class="cursor-pointer">
+                            <input type="radio" name="itemCategory" value="景點" class="peer sr-only" checked>
+                            <div class="py-2 rounded-xl border border-slate-200 text-center text-xs font-medium peer-checked:bg-rose-50 peer-checked:border-rose-500 peer-checked:text-rose-700 transition">
+                                📸 景點
+                            </div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="itemCategory" value="餐廳" class="peer sr-only">
+                            <div class="py-2 rounded-xl border border-slate-200 text-center text-xs font-medium peer-checked:bg-amber-50 peer-checked:border-amber-500 peer-checked:text-amber-700 transition">
+                                🍜 餐廳
+                            </div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="itemCategory" value="交通" class="peer sr-only">
+                            <div class="py-2 rounded-xl border border-slate-200 text-center text-xs font-medium peer-checked:bg-sky-50 peer-checked:border-sky-500 peer-checked:text-sky-700 transition">
+                                🚆 交通
+                            </div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="itemCategory" value="購物" class="peer sr-only">
+                            <div class="py-2 rounded-xl border border-slate-200 text-center text-xs font-medium peer-checked:bg-purple-50 peer-checked:border-purple-500 peer-checked:text-purple-700 transition">
+                                🛍️ 購物
+                            </div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="itemCategory" value="住宿" class="peer sr-only">
+                            <div class="py-2 rounded-xl border border-slate-200 text-center text-xs font-medium peer-checked:bg-emerald-50 peer-checked:border-emerald-500 peer-checked:text-emerald-700 transition">
+                                🏨 住宿
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- 名稱 -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">地點 / 餐廳 / 行程名稱 *</label>
+                    <input type="text" id="itemTitle" required placeholder="例如：清水寺、一蘭拉麵、南海電鐵特急" class="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium">
+                </div>
+
+                <!-- Google Maps 連結 -->
+                <div>
+                    <div class="flex items-center justify-between mb-1">
+                        <label class="text-xs font-semibold text-slate-600 flex items-center gap-1">
+                            <i class="fa-solid fa-map-location-dot text-rose-500"></i>
+                            <span>Google Maps 網址（選填）</span>
+                        </label>
+                        <span class="text-[11px] text-slate-400">未填寫將自動以名稱搜尋導航</span>
+                    </div>
+                    <input type="url" id="itemMapUrl" placeholder="貼上 Google Maps 分享連結 https://maps.app.goo.gl/..." class="w-full rounded-xl border border-slate-300 px-3.5 py-2 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-xs">
+                </div>
+
+                <!-- 外部官網 / 訂位連結 -->
+                <div class="grid grid-cols-3 gap-2">
+                    <div class="col-span-2">
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">
+                            <i class="fa-solid fa-globe text-indigo-500 mr-1"></i>外部官網 / 食記 / 預約連結
+                        </label>
+                        <input type="url" id="itemWebUrl" placeholder="https://..." class="w-full rounded-xl border border-slate-300 px-3 py-2 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">按鈕顯示文字</label>
+                        <input type="text" id="itemWebLabel" placeholder="官網 / 菜單" class="w-full rounded-xl border border-slate-300 px-3 py-2 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-xs">
+                    </div>
+                </div>
+
+                <!-- 預算 / 推薦刷卡與付款備註 -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">
+                        <i class="fa-regular fa-credit-card text-emerald-600 mr-1"></i>花費預算 / 付款與刷卡提醒（選填）
+                    </label>
+                    <input type="text" id="itemCostTip" placeholder="例如：¥4,500｜只收現金 / 建議刷熊本熊卡 / 預約代號 #8921" class="w-full rounded-xl border border-slate-300 px-3.5 py-2 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-xs">
+                </div>
+
+                <!-- 備註資訊 (營業時間、必點菜單、注意事項) -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">
+                        <i class="fa-regular fa-note-sticky text-amber-500 mr-1"></i>詳細備註（營業時間、必點推薦、搭乘月台等）
+                    </label>
+                    <textarea id="itemNotes" rows="3" placeholder="例如：營業時間 09:00-18:00，必點抹茶提拉米蘇，提早15分鐘抵達報到..." class="w-full rounded-xl border border-slate-300 p-3 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-xs leading-relaxed"></textarea>
+                </div>
+
+                <!-- 儲存與取消按鈕 -->
+                <div class="pt-2 flex items-center gap-2">
+                    <button type="button" onclick="closeItemModal()" class="w-1/3 py-3 rounded-xl border border-slate-300 text-slate-600 font-semibold text-xs hover:bg-slate-100">
+                        取消
+                    </button>
+                    <button type="submit" class="w-2/3 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-md shadow-indigo-500/20">
+                        儲存行程
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         Modal 2: 修改旅程大標題
+    =========================================== -->
+    <div id="tripSettingsModal" class="fixed inset-0 z-40 hidden bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden">
+            <div class="px-5 py-4 bg-slate-900 text-white flex items-center justify-between">
+                <h3 class="text-sm font-bold">修改旅程名稱與副標題</h3>
+                <button onclick="closeTripSettingsModal()" class="text-slate-400 hover:text-white">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <form onsubmit="saveTripSettings(event)" class="p-5 space-y-4 text-sm">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">旅程主標題</label>
+                    <input type="text" id="editTripTitle" required class="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">旅程日期或副標題</label>
+                    <input type="text" id="editTripSubtitle" class="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-xs">
+                </div>
+                <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" onclick="closeTripSettingsModal()" class="px-4 py-2 rounded-xl border border-slate-300 text-xs font-semibold text-slate-600">取消</button>
+                    <button type="submit" class="px-5 py-2 rounded-xl bg-indigo-600 text-white text-xs font-bold">儲存修改</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         Modal 3: 管理天數與每日主題
+    =========================================== -->
+    <div id="dayManagerModal" class="fixed inset-0 z-40 hidden bg-slate-900/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-2xl shadow-2xl max-h-[85vh] flex flex-col overflow-hidden">
+            <div class="px-5 py-4 bg-slate-900 text-white flex items-center justify-between">
+                <h3 class="text-sm font-bold flex items-center gap-2">
+                    <i class="fa-regular fa-calendar-days text-indigo-400"></i>
+                    <span>管理天數與每日主題</span>
+                </h3>
+                <button onclick="closeDayManagerModal()" class="w-8 h-8 rounded-full bg-slate-800 text-slate-300 flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="p-5 overflow-y-auto space-y-3 flex-1" id="dayManagerList">
+                <!-- 由 JS 動態生成每日編輯列 -->
+            </div>
+            <div class="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-3">
+                <button onclick="addNewDay()" class="flex-1 py-2.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs border border-indigo-200 flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>新增一天 (Day)</span>
+                </button>
+                <button onclick="closeDayManagerModal()" class="px-6 py-2.5 rounded-xl bg-slate-900 text-white font-bold text-xs">
+                    完成
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         Modal 4: 備份 / 匯入 / 更新至 GitHub 說明
+    =========================================== -->
+    <div id="syncModal" class="fixed inset-0 z-40 hidden bg-slate-900/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-2xl shadow-2xl max-h-[90vh] flex flex-col overflow-hidden">
+            <div class="px-5 py-4 bg-slate-900 text-white flex items-center justify-between">
+                <h3 class="text-sm font-bold flex items-center gap-2">
+                    <i class="fa-solid fa-cloud-arrow-up text-emerald-400"></i>
+                    <span>資料儲存、旅伴分享與 GitHub 同步</span>
+                </h3>
+                <button onclick="closeSyncModal()" class="w-8 h-8 rounded-full bg-slate-800 text-slate-300 flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="p-5 overflow-y-auto space-y-4 text-xs leading-relaxed text-slate-600">
+                <div class="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900">
+                    <p class="font-bold flex items-center gap-1.5 mb-1">
+                        <i class="fa-solid fa-floppy-disk text-emerald-600"></i>
+                        自動本機儲存中 (LocalStorage)
+                    </p>
+                    <p>你在這個畫面上新增或修改的任何行程，都會<strong>自動儲存在你目前的手機或電腦瀏覽器裡</strong>，就算沒有網路也能隨時打開查看！</p>
+                </div>
+
+                <!-- 匯出與分享給旅伴 -->
+                <div class="space-y-2">
+                    <h4 class="font-bold text-slate-800 text-sm">📤 方式一：傳送行程代碼給旅伴（或跨裝置同步）</h4>
+                    <p>如果你在電腦排好行程，想傳給手機或旅伴：點選下方「複製行程資料代碼」，透過 LINE 傳給對方，對方打開網址後點選「貼上並匯入」即可瞬間同步！</p>
+                    <div class="flex gap-2 pt-1">
+                        <button onclick="copyJsonData()" class="flex-1 py-2.5 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold flex items-center justify-center gap-1.5 shadow-sm">
+                            <i class="fa-regular fa-copy"></i>
+                            <span>複製目前行程代碼</span>
+                        </button>
+                        <button onclick="resetToDefaultData()" class="py-2.5 px-3 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 font-semibold flex items-center justify-center gap-1">
+                            <i class="fa-solid fa-rotate-left"></i>
+                            <span>還原預設範例</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 匯入區塊 -->
+                <div class="space-y-2 pt-2 border-t border-slate-200">
+                    <label class="font-bold text-slate-800 text-sm block">📥 匯入行程資料代碼</label>
+                    <textarea id="importJsonTextarea" rows="3" placeholder="在此貼上複製的 JSON 行程代碼..." class="w-full rounded-xl border border-slate-300 p-2.5 bg-slate-50 font-mono text-[11px] focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+                    <button onclick="importJsonData()" class="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold">
+                        確認匯入並覆蓋目前行程
+                    </button>
+                </div>
+
+                <!-- 寫死進 GitHub 說明 -->
+                <div class="p-3.5 rounded-xl bg-slate-100 border border-slate-200 space-y-1.5">
+                    <p class="font-bold text-slate-800">💡 方式二：如何把排好的行程永久寫入 GitHub Pages？</p>
+                    <p>如果你想讓所有打開你 GitHub 網址的人，不用匯入就能直接看到最新行程：只要點擊上方「複製目前行程代碼」，打開你 GitHub 上的 <code class="bg-white px-1 py-0.5 rounded border">index.html</code>，找到程式碼下方的 <code class="bg-white px-1 py-0.5 rounded border">const DEFAULT_TRIP_DATA = ...</code>，把整段替換成你複製的內容即可！</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // =========================================================================
+        // ★ 預設行程資料庫 (DEFAULT_TRIP_DATA)
+        // 如果想把排好的行程永久固定在 GitHub Pages 上，只要把匯出的 JSON 貼上取代這裡即可
+        // =========================================================================
+        const DEFAULT_TRIP_DATA = {
+            tripTitle: "2026 關西賞楓自由行 🍁",
+            tripSubtitle: "大阪・京都 5天4夜 ｜ 隨身導航與美食手冊",
+            days: [
+                { id: "day1", label: "Day 1", date: "11/24 (二)", theme: "抵達關西機場・心齋橋與道頓堀美食" },
+                { id: "day2", label: "Day 2", date: "11/25 (三)", theme: "京都清水寺和服體驗・二年坂・八坂神社" },
+                { id: "day3", label: "Day 3", date: "11/26 (四)", theme: "東福寺通天橋賞楓・伏見稻荷・京都車站" },
+                { id: "day4", label: "Day 4", date: "11/27 (五)", theme: "南禪寺・永觀堂夜楓・河原町商圈" },
+                { id: "day5", label: "Day 5", date: "11/28 (六)", theme: "黑門市場早午餐・臨空城 Outlet・返程" }
+            ],
+            items: [
+                // Day 1
+                {
+                    id: "item-101",
+                    dayId: "day1",
+                    time: "13:30",
+                    category: "交通",
+                    title: "關西國際機場 → 難波 (南海電鐵 Rapi:t)",
+                    mapUrl: "https://www.google.com/maps/search/?api=1&query=關西國際機場車站",
+                    webUrl: "https://www.howto-osaka.com/tc/",
+                    webLabel: "時刻表與票價",
+                    costTip: "¥1,350｜已於 Klook 購買電子票，掃 QR Code 進站",
+                    notes: "出關後走過空橋到對面「南海電鐵」月台，搭乘特急 Rapi:t 約 38 分鐘直達難波站。"
+                },
+                {
+                    id: "item-102",
+                    dayId: "day1",
+                    time: "15:00",
+                    category: "住宿",
+                    title: "心齋橋飯店 Check-in 放行李",
+                    mapUrl: "https://www.google.com/maps/search/?api=1&query=心齋橋站",
+                    webUrl: "",
+                    webLabel: "",
+                    costTip: "已線上刷卡付清｜現場需付大阪住宿稅 ¥200/人 (備現金)",
+                    notes: "難波站步行或轉御堂筋線 1 站即達心齋橋。確認護照與訂房憑證。"
+                },
+                {
+                    id: "item-103",
+                    dayId: "day1",
+                    time: "16:30",
+                    category: "購物",
+                    title: "心齋橋筋商店街 & PARCO 百貨",
+                    mapUrl: "https://www.google.com/maps/search/?api=1&query=心齋橋PARCO",
+                    webUrl: "https://shinsaibashi.parco.jp.t.ali.hp.transer.com/",
+                    webLabel: "PARCO 樓層指南",
+                    costTip: "建議刷 PayPay 或高回饋日本旅遊信用卡｜記得帶護照退稅",
+                    notes: "6F 有吉伊卡哇 (Chiikawa)、寶可夢中心與橡子共和國；藥妝可先比價。"
+                },
+                {
+                    id: "item-104",
+                    dayId: "day1",
+                    time: "19:00",
+                    category: "餐廳",
+                    title: "道頓堀 燒肉 / 大阪燒晚餐",
+                    mapUrl: "https://www.google.com/maps/search/?api=1&query=道頓堀固力果跑跑人",
+                    webUrl: "https://tabelog.com/tw/osaka/",
+                    webLabel: "Tabelog 評價",
+                    costTip: "預算 ¥4,000/人｜可刷卡或 ICOCA",
+                    notes: "吃完順便拍固力果跑跑人看板，宵夜可買本家章魚燒回飯店配啤酒。"
+                },
+
+                // Day 2
+                {
+                    id: "item-201",
+                    dayId: "day2",
+                    time: "09:00",
+                    category: "景點",
+                    title: "清水道 一期和服租借 (Ichigo Kimono)",
+                    mapUrl: "https://www.google.com/maps/search/?api=1&query=清水寺",
+                    webUrl: "",
+                    webLabel: "預約確認信",
+                    costTip: "現場現金支付｜建議準備日幣現鈔",
+                    notes: "準時抵達挑款式與編髮，全程約需 1 小時著裝，大型隨身包包可寄放店內。"
+                },
+                {
+                    id: "item-202",
+                    dayId: "day2",
+                    time: "10:30",
+                    category: "景點",
+                    title: "清水寺本堂・奧之院賞楓",
+                    mapUrl: "https://www.google.com/maps/search/?api=1&query=清水寺",
+                    webUrl: "https://www.kiyomizudera.or.jp/",
+                    webLabel: "清水寺官網",
+                    costTip: "拜觀料 ¥500/人｜建議備妥零錢買門票與御守",
+                    notes: "從仁王門、三重塔一路逛到清水舞台，秋季紅楓搭配古寺建築是京都必拍角度！"
+                },
+                {
+                    id: "item-203",
+                    dayId: "day2",
+                    time: "12:30",
+                    category: "餐廳",
+                    title: "二年坂 / 產寧坂 午餐與抹茶甜點",
+                    mapUrl: "https://www.google.com/maps/search/?api=1&query=二年坂",
+                    webUrl: "",
+                    webLabel: "",
+                    costTip: "多數老舖僅收現金，部分支援交通卡 (Suica/ICOCA)",
+                    notes: "沿著石坂路往下散步，推薦順路逛榻榻米星巴克（京都二寧坂ヤサカ茶屋店）、藤菜美醬油糰子。"
+                },
+                {
+                    id: "item-204",
+                    dayId: "day2",
+                    time: "15:30",
+                    category: "景點",
+                    title: "八坂庚申堂 → 圓山公園 → 八坂神社",
+                    mapUrl: "https://www.google.com/maps/search/?api=1&query=圓山公園+京都",
+                    webUrl: "https://www.yasaka-jinja.or.jp/",
+                    webLabel: "八坂神社官網",
+                    costTip: "免費參觀｜17:00 前記得返回和服店歸還和服",
+                    notes: "八坂庚申堂的彩色束猿非常適合穿和服拍照，接著順遊圓山公園池畔紅葉與八坂神社。"
+                },
+
+                // Day 3
+                {
+                    id: "item-301",
+                    dayId: "day3",
+                    time: "08:30",
+                    category: "景點",
+                    title: "東福寺・臥雲橋與通天橋賞楓",
+                    mapUrl: "https://www.google.com/maps/search/?api=1&query=東福寺",
+                    webUrl: "https://tofukuji.jp/",
+                    webLabel: "東福寺官網",
+                    costTip: "通天橋拜觀料 ¥1,000｜強烈建議一早前往避開人潮",
+                    notes: "京都賞楓第一名所！先在免費的「臥雲橋」拍向通天橋，再買票進「通天橋」俯瞰洗玉澗滿谷紅葉。"
+                },
+                {
+                    id: "item-302",
+                    dayId: "day3",
+                    time: "11:30",
+                    category: "景點",
+                    title: "伏見稻荷大社・千本鳥居",
+                    mapUrl: "https://www.google.com/maps/search/?api=1&query=伏見稻荷大社",
+                    webUrl: "https://inari.jp/zh-tw/",
+                    webLabel: "伏見稻荷官網",
+                    costTip: "免費參觀｜從東福寺搭 JR 或京阪電車僅需 1 站（約2分鐘）",
+                    notes: "拍完千本鳥居後，可在表參道商店街吃烤和牛串、稻荷壽司與烤鵪鶉。"
+                },
+
+                // Day 4
+                {
+                    id: "item-401",
+                    dayId: "day4",
+                    time: "14:30",
+                    category: "景點",
+                    title: "南禪寺 三門・水路閣",
+                    mapUrl: "https://www.google.com/maps/search/?api=1&query=南禪寺",
+                    webUrl: "https://nanzenji.or.jp/",
+                    webLabel: "南禪寺官網",
+                    costTip: "境內免費，登三門 ¥600",
+                    notes: "紅磚拱橋造型琵琶湖疏水「水路閣」非常出片，周邊順正湯豆腐也很有名。"
+                },
+                {
+                    id: "item-402",
+                    dayId: "day4",
+                    time: "17:30",
+                    category: "景點",
+                    title: "永觀堂 禪林寺（紅葉之永觀堂・夜楓點燈）",
+                    mapUrl: "https://www.google.com/maps/search/?api=1&query=永觀堂禪林寺",
+                    webUrl: "https://www.eikando.or.jp/",
+                    webLabel: "永觀堂官網",
+                    costTip: "夜間拜觀 ¥700｜只收現金，排隊人潮多請提早抵達",
+                    notes: "放生池倒映夜楓與多寶塔是京都秋夜絕景，從南禪寺步行過來約 7 分鐘。"
+                },
+
+                // Day 5
+                {
+                    id: "item-501",
+                    dayId: "day5",
+                    time: "10:00",
+                    category: "餐廳",
+                    title: "黑門市場 海鮮早午餐 & 最後採買",
+                    mapUrl: "https://www.google.com/maps/search/?api=1&query=黑門市場",
+                    webUrl: "https://kuromon.com/jp/",
+                    webLabel: "黑門市場地圖",
+                    costTip: "現金 / PayPay 為主｜推薦現烤干貝、海膽、草莓大福",
+                    notes: "吃完回飯店拿行李，前往難波站搭南海電鐵去機場（或先停臨空城站逛 Outlet）。"
+                }
+            ]
+        };
+
+        // =========================================================================
+        // 狀態管理與 LocalStorage 讀寫
+        // =========================================================================
+        const STORAGE_KEY = "TRAVEL_ITINERARY_APP_DATA_V1";
+        let appData = loadData();
+        let currentDayId = appData.days[0]?.id || "day1";
+        let currentCategoryFilter = "全部";
+        let deleteConfirmId = null;
+
+        // 類別顏色與圖示設定
+        const CATEGORY_CONFIG = {
+            "景點": { badgeBg: "bg-rose-100 text-rose-700 border-rose-200", dotBg: "bg-rose-500", icon: "fa-camera" },
+            "餐廳": { badgeBg: "bg-amber-100 text-amber-800 border-amber-200", dotBg: "bg-amber-500", icon: "fa-utensils" },
+            "交通": { badgeBg: "bg-sky-100 text-sky-700 border-sky-200", dotBg: "bg-sky-500", icon: "fa-train-subway" },
+            "購物": { badgeBg: "bg-purple-100 text-purple-700 border-purple-200", dotBg: "bg-purple-500", icon: "fa-bag-shopping" },
+            "住宿": { badgeBg: "bg-emerald-100 text-emerald-700 border-emerald-200", dotBg: "bg-emerald-500", icon: "fa-bed" }
+        };
+
+        function loadData() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    if (parsed && Array.isArray(parsed.days) && Array.isArray(parsed.items)) {
+                        return parsed;
+                    }
+                }
+            } catch (e) {
+                console.error("讀取本機資料失敗，使用預設資料", e);
+            }
+            return JSON.parse(JSON.stringify(DEFAULT_TRIP_DATA));
+        }
+
+        function saveData(toastText = "已自動儲存變更") {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+                if (toastText) showToast(toastText);
+            } catch (e) {
+                console.error("儲存失敗", e);
+            }
+        }
+
+        function showToast(text) {
+            const toast = document.getElementById("toastMessage");
+            const textSpan = document.getElementById("toastText");
+            textSpan.textContent = text;
+            toast.classList.remove("hidden");
+            clearTimeout(window.toastTimer);
+            window.toastTimer = setTimeout(() => {
+                toast.classList.add("hidden");
+            }, 2200);
+        }
+
+        // =========================================================================
+        // 畫面渲染邏輯
+        // =========================================================================
+        function renderAll() {
+            // 確保 currentDayId 存在
+            if (!appData.days.find(d => d.id === currentDayId)) {
+                currentDayId = appData.days[0]?.id || "";
+            }
+            renderHeader();
+            renderCategoryFilterBar();
+            renderDayTabs();
+            renderCurrentDayBanner();
+            renderItineraryList();
+        }
+
+        function renderHeader() {
+            document.getElementById("tripTitleDisplay").textContent = appData.tripTitle || "我的旅遊行程";
+            document.getElementById("tripSubtitleDisplay").textContent = appData.tripSubtitle || "點擊修改日期與副標題";
+            document.title = appData.tripTitle || "隨身旅遊行程 App";
+        }
+
+        function renderCategoryFilterBar() {
+            const categories = ["全部", "景點", "餐廳", "交通", "購物", "住宿"];
+            const container = document.getElementById("categoryFilterBar");
+            container.innerHTML = categories.map(cat => {
+                const active = currentCategoryFilter === cat;
+                const btnClass = active
+                    ? "bg-indigo-500 text-white border-indigo-400 font-bold shadow-xs"
+                    : "bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700";
+                return `
+                    <button onclick="setCategoryFilter('${cat}')" class="px-3 py-1 rounded-full text-xs border whitespace-nowrap transition ${btnClass}">
+                        ${cat === "全部" ? "✨ 全部類別" : cat}
+                    </button>
+                `;
+            }).join("");
+        }
+
+        function setCategoryFilter(cat) {
+            currentCategoryFilter = cat;
+            renderCategoryFilterBar();
+            renderItineraryList();
+        }
+
+        function renderDayTabs() {
+            const container = document.getElementById("dayTabsContainer");
+            container.innerHTML = appData.days.map(day => {
+                const isActive = day.id === currentDayId;
+                const count = appData.items.filter(i => i.dayId === day.id).length;
+                const activeClasses = isActive
+                    ? "bg-white text-slate-900 shadow-md ring-2 ring-indigo-400 font-bold"
+                    : "bg-slate-700/60 text-slate-300 hover:bg-slate-700 font-medium";
+                return `
+                    <button onclick="selectDay('${day.id}')" class="px-3.5 py-2 rounded-xl text-left shrink-0 transition flex flex-col justify-center min-w-[92px] ${activeClasses}">
+                        <div class="flex items-center justify-between gap-1.5">
+                            <span class="text-xs font-extrabold tracking-wide">${escapeHtml(day.label)}</span>
+                            <span class="text-[10px] px-1.5 py-0.2 rounded-full ${isActive ? 'bg-indigo-100 text-indigo-700 font-bold' : 'bg-slate-600 text-slate-300'}">${count}</span>
+                        </div>
+                        <span class="text-[11px] ${isActive ? 'text-slate-600' : 'text-slate-400'} truncate mt-0.5">${escapeHtml(day.date || "未設日期")}</span>
+                    </button>
+                `;
+            }).join("");
+        }
+
+        function selectDay(dayId) {
+            currentDayId = dayId;
+            deleteConfirmId = null;
+            renderDayTabs();
+            renderCurrentDayBanner();
+            renderItineraryList();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function renderCurrentDayBanner() {
+            const dayObj = appData.days.find(d => d.id === currentDayId);
+            if (!dayObj) return;
+            document.getElementById("currentDayBadge").textContent = `${dayObj.label} ${dayObj.date ? '・' + dayObj.date : ''}`;
+            document.getElementById("currentDayTheme").textContent = dayObj.theme || "點擊右側編輯當日主題";
+        }
+
+        function renderItineraryList() {
+            const container = document.getElementById("itineraryListContainer");
+            let items = appData.items
+                .filter(item => item.dayId === currentDayId)
+                .sort((a, b) => (a.time || "00:00").localeCompare(b.time || "00:00"));
+
+            if (currentCategoryFilter !== "全部") {
+                items = items.filter(item => item.category === currentCategoryFilter);
+            }
+
+            if (items.length === 0) {
+                container.innerHTML = `
+                    <div class="bg-white rounded-2xl border border-dashed border-slate-300 p-8 text-center my-4">
+                        <div class="w-12 h-12 rounded-full bg-indigo-50 text-indigo-500 flex items-center justify-center mx-auto mb-3 text-xl">
+                            <i class="fa-regular fa-compass"></i>
+                        </div>
+                        <p class="text-sm font-bold text-slate-700">這天還沒有${currentCategoryFilter === '全部' ? '' : '「' + currentCategoryFilter + '」'}行程</p>
+                        <p class="text-xs text-slate-400 mt-1 mb-4">點擊下方按鈕，把想去的景點、餐廳與 Google Maps 連結加進來吧！</p>
+                        <button onclick="openItemModal()" class="px-4 py-2 rounded-xl bg-indigo-600 text-white text-xs font-bold shadow-xs">
+                            + 立即新增行程
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = `<div class="space-y-4">` + items.map(item => {
+                const catStyle = CATEGORY_CONFIG[item.category] || CATEGORY_CONFIG["景點"];
+                // 若沒有填寫 Google Maps 網址，自動產生以標題為關鍵字的 Google Maps 導航連結
+                const finalMapUrl = item.mapUrl && item.mapUrl.trim() !== ""
+                    ? item.mapUrl.trim()
+                    : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.title)}`;
+
+                const hasWebUrl = item.webUrl && item.webUrl.trim() !== "";
+                const webBtnText = item.webLabel && item.webLabel.trim() !== "" ? item.webLabel.trim() : "官網 / 資訊";
+                const isConfirmingDelete = deleteConfirmId === item.id;
+
+                return `
+                    <div class="timeline-item relative pl-10">
+                        <!-- 左側時間軸圓點與線條 -->
+                        <div class="timeline-line">
+                            <div class="absolute left-2.5 top-1.5 w-5 h-5 rounded-full ${catStyle.dotBg} text-white flex items-center justify-center text-[10px] shadow-xs ring-4 ring-slate-50 z-10">
+                                <i class="fa-solid ${catStyle.icon}"></i>
+                            </div>
+                        </div>
+
+                        <!-- 卡片本體 -->
+                        <div class="bg-white rounded-2xl p-4 shadow-xs border border-slate-200/90 hover:border-indigo-200 transition">
+                            <!-- 第一行：時間、分類標籤、編輯與刪除 -->
+                            <div class="flex items-center justify-between gap-2 mb-1.5">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-sm font-extrabold text-slate-900 font-mono tracking-tight bg-slate-100 px-2 py-0.5 rounded-md">${escapeHtml(item.time)}</span>
+                                    <span class="text-[11px] font-bold px-2 py-0.5 rounded-md border ${catStyle.badgeBg}">
+                                        ${escapeHtml(item.category)}
+                                    </span>
+                                </div>
+                                <div class="flex items-center gap-1">
+                                    <button onclick="openItemModal('${item.id}')" class="w-7 h-7 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 flex items-center justify-center transition" title="編輯">
+                                        <i class="fa-solid fa-pen-to-square text-xs"></i>
+                                    </button>
+                                    ${isConfirmingDelete ? `
+                                        <button onclick="confirmDeleteItem('${item.id}')" class="px-2 py-1 rounded-lg bg-rose-600 text-white text-[11px] font-bold">確認刪除</button>
+                                        <button onclick="cancelDeleteItem()" class="px-1.5 py-1 rounded-lg bg-slate-200 text-slate-600 text-[11px]">取消</button>
+                                    ` : `
+                                        <button onclick="askDeleteItem('${item.id}')" class="w-7 h-7 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center transition" title="刪除">
+                                            <i class="fa-regular fa-trash-can text-xs"></i>
+                                        </button>
+                                    `}
+                                </div>
+                            </div>
+
+                            <!-- 第二行：標題 -->
+                            <h3 class="text-base font-bold text-slate-900 leading-snug mb-2">
+                                ${escapeHtml(item.title)}
+                            </h3>
+
+                            <!-- 第三行：預算 / 刷卡 / 預約提醒 -->
+                            ${item.costTip ? `
+                                <div class="mb-2 px-2.5 py-1.5 rounded-xl bg-emerald-50/90 border border-emerald-200/70 text-emerald-900 text-xs flex items-start gap-1.5">
+                                    <i class="fa-solid fa-wallet text-emerald-600 mt-0.5 shrink-0"></i>
+                                    <span class="font-medium">${escapeHtml(item.costTip)}</span>
+                                </div>
+                            ` : ''}
+
+                            <!-- 第四行：詳細備註 -->
+                            ${item.notes ? `
+                                <p class="text-xs text-slate-600 leading-relaxed bg-slate-50 p-2.5 rounded-xl border border-slate-100 mb-3 whitespace-pre-line">${escapeHtml(item.notes)}</p>
+                            ` : ''}
+
+                            <!-- 第五行：一鍵導航與外部連結大按鈕 -->
+                            <div class="flex items-center gap-2 pt-1">
+                                <a href="${escapeHtml(finalMapUrl)}" target="_blank" rel="noopener noreferrer" class="flex-1 py-2 px-3 rounded-xl bg-rose-50 hover:bg-rose-100 active:bg-rose-200 text-rose-700 border border-rose-200/80 font-bold text-xs flex items-center justify-center gap-1.5 transition">
+                                    <i class="fa-solid fa-location-dot text-rose-600"></i>
+                                    <span>Google Maps 導航</span>
+                                </a>
+                                ${hasWebUrl ? `
+                                    <a href="${escapeHtml(item.webUrl)}" target="_blank" rel="noopener noreferrer" class="flex-1 py-2 px-3 rounded-xl bg-indigo-50 hover:bg-indigo-100 active:bg-indigo-200 text-indigo-700 border border-indigo-200/80 font-bold text-xs flex items-center justify-center gap-1.5 transition">
+                                        <i class="fa-solid fa-arrow-up-right-from-square text-indigo-600 text-[11px]"></i>
+                                        <span class="truncate">${escapeHtml(webBtnText)}</span>
+                                    </a>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join("") + `</div>`;
+        }
+
+        // =========================================================================
+        // 行程項目 新增 / 編輯 / 刪除
+        // =========================================================================
+        function openItemModal(editId = null) {
+            const modal = document.getElementById("itemModal");
+            const daySelect = document.getElementById("itemDaySelect");
+
+            // 填充天數下拉選單
+            daySelect.innerHTML = appData.days.map(d =>
+                `<option value="${d.id}">${escapeHtml(d.label)} (${escapeHtml(d.date || d.theme)})</option>`
+            ).join("");
+
+            if (editId) {
+                const item = appData.items.find(i => i.id === editId);
+                if (!item) return;
+                document.getElementById("itemModalTitle").innerHTML = `<i class="fa-solid fa-pen-to-square text-indigo-400"></i><span>編輯行程項目</span>`;
+                document.getElementById("itemId").value = item.id;
+                daySelect.value = item.dayId;
+                document.getElementById("itemTime").value = item.time || "09:00";
+                document.getElementById("itemTitle").value = item.title || "";
+                document.getElementById("itemMapUrl").value = item.mapUrl || "";
+                document.getElementById("itemWebUrl").value = item.webUrl || "";
+                document.getElementById("itemWebLabel").value = item.webLabel || "";
+                document.getElementById("itemCostTip").value = item.costTip || "";
+                document.getElementById("itemNotes").value = item.notes || "";
+
+                const radio = document.querySelector(`input[name="itemCategory"][value="${item.category}"]`);
+                if (radio) radio.checked = true;
+            } else {
+                document.getElementById("itemModalTitle").innerHTML = `<i class="fa-solid fa-plus text-indigo-400"></i><span>新增行程項目</span>`;
+                document.getElementById("itemForm").reset();
+                document.getElementById("itemId").value = "";
+                daySelect.value = currentDayId;
+                document.getElementById("itemTime").value = "10:00";
+            }
+
+            modal.classList.remove("hidden");
+        }
+
+        function closeItemModal() {
+            document.getElementById("itemModal").classList.add("hidden");
+        }
+
+        function saveItineraryItem(e) {
+            e.preventDefault();
+            const id = document.getElementById("itemId").value;
+            const dayId = document.getElementById("itemDaySelect").value;
+            const time = document.getElementById("itemTime").value;
+            const category = document.querySelector('input[name="itemCategory"]:checked')?.value || "景點";
+            const title = document.getElementById("itemTitle").value.trim();
+            const mapUrl = document.getElementById("itemMapUrl").value.trim();
+            const webUrl = document.getElementById("itemWebUrl").value.trim();
+            const webLabel = document.getElementById("itemWebLabel").value.trim();
+            const costTip = document.getElementById("itemCostTip").value.trim();
+            const notes = document.getElementById("itemNotes").value.trim();
+
+            if (!title) return;
+
+            if (id) {
+                const idx = appData.items.findIndex(i => i.id === id);
+                if (idx > -1) {
+                    appData.items[idx] = { id, dayId, time, category, title, mapUrl, webUrl, webLabel, costTip, notes };
+                }
+            } else {
+                const newId = "item-" + Date.now();
+                appData.items.push({ id: newId, dayId, time, category, title, mapUrl, webUrl, webLabel, costTip, notes });
+            }
+
+            currentDayId = dayId;
+            saveData("行程已儲存！");
+            closeItemModal();
+            renderAll();
+        }
+
+        function askDeleteItem(id) {
+            deleteConfirmId = id;
+            renderItineraryList();
+        }
+
+        function cancelDeleteItem() {
+            deleteConfirmId = null;
+            renderItineraryList();
+        }
+
+        function confirmDeleteItem(id) {
+            appData.items = appData.items.filter(i => i.id !== id);
+            deleteConfirmId = null;
+            saveData("已刪除該筆行程");
+            renderAll();
+        }
+
+        // =========================================================================
+        // 旅程標題與天數管理
+        // =========================================================================
+        function openTripSettingsModal() {
+            document.getElementById("editTripTitle").value = appData.tripTitle || "";
+            document.getElementById("editTripSubtitle").value = appData.tripSubtitle || "";
+            document.getElementById("tripSettingsModal").classList.remove("hidden");
+        }
+
+        function closeTripSettingsModal() {
+            document.getElementById("tripSettingsModal").classList.add("hidden");
+        }
+
+        function saveTripSettings(e) {
+            e.preventDefault();
+            appData.tripTitle = document.getElementById("editTripTitle").value.trim() || "我的旅遊行程";
+            appData.tripSubtitle = document.getElementById("editTripSubtitle").value.trim();
+            saveData("已更新旅程標題");
+            closeTripSettingsModal();
+            renderHeader();
+        }
+
+        function openDayManagerModal() {
+            renderDayManagerList();
+            document.getElementById("dayManagerModal").classList.remove("hidden");
+        }
+
+        function closeDayManagerModal() {
+            document.getElementById("dayManagerModal").classList.add("hidden");
+            renderAll();
+        }
+
+        function renderDayManagerList() {
+            const container = document.getElementById("dayManagerList");
+            container.innerHTML = appData.days.map((day, index) => `
+                <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+                    <div class="flex items-center justify-between gap-2">
+                        <input type="text" value="${escapeHtml(day.label)}" onchange="updateDayField('${day.id}', 'label', this.value)" class="w-24 font-bold text-xs px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white" placeholder="Day 1">
+                        <input type="text" value="${escapeHtml(day.date)}" onchange="updateDayField('${day.id}', 'date', this.value)" class="flex-1 text-xs px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white" placeholder="日期，如 11/24 (二)">
+                        ${appData.days.length > 1 ? `
+                            <button onclick="removeDay('${day.id}')" class="px-2.5 py-1.5 rounded-lg text-rose-600 hover:bg-rose-50 text-xs font-semibold" title="刪除此天">
+                                <i class="fa-regular fa-trash-can"></i>
+                            </button>
+                        ` : ''}
+                    </div>
+                    <div>
+                        <input type="text" value="${escapeHtml(day.theme)}" onchange="updateDayField('${day.id}', 'theme', this.value)" class="w-full text-xs px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white" placeholder="當日主題，如：清水寺周邊一日遊">
+                    </div>
+                </div>
+            `).join("");
+        }
+
+        function updateDayField(dayId, field, value) {
+            const day = appData.days.find(d => d.id === dayId);
+            if (day) {
+                day[field] = value.trim();
+                saveData();
+            }
+        }
+
+        function addNewDay() {
+            const nextNum = appData.days.length + 1;
+            const newDayId = "day-" + Date.now();
+            appData.days.push({
+                id: newDayId,
+                label: `Day ${nextNum}`,
+                date: `第 ${nextNum} 天`,
+                theme: "自由探索行程"
+            });
+            saveData(`已新增 Day ${nextNum}`);
+            renderDayManagerList();
+        }
+
+        function removeDay(dayId) {
+            if (appData.days.length <= 1) return;
+            appData.days = appData.days.filter(d => d.id !== dayId);
+            appData.items = appData.items.filter(i => i.dayId !== dayId);
+            if (currentDayId === dayId) {
+                currentDayId = appData.days[0].id;
+            }
+            saveData("已刪除天數");
+            renderDayManagerList();
+        }
+
+        // =========================================================================
+        // 備份 / 匯入 / 剪貼簿功能
+        // =========================================================================
+        function openSyncModal() {
+            document.getElementById("importJsonTextarea").value = "";
+            document.getElementById("syncModal").classList.remove("hidden");
+        }
+
+        function closeSyncModal() {
+            document.getElementById("syncModal").classList.add("hidden");
+        }
+
+        function copyJsonData() {
+            const jsonStr = JSON.stringify(appData, null, 2);
+            const textarea = document.createElement("textarea");
+            textarea.value = jsonStr;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand("copy");
+            document.body.removeChild(textarea);
+            showToast("已複製行程代碼！可傳給旅伴或貼回 GitHub");
+        }
+
+        function importJsonData() {
+            const raw = document.getElementById("importJsonTextarea").value.trim();
+            if (!raw) {
+                showToast("請先貼上行程 JSON 代碼");
+                return;
+            }
+            try {
+                const parsed = JSON.parse(raw);
+                if (parsed && Array.isArray(parsed.days) && Array.isArray(parsed.items)) {
+                    appData = parsed;
+                    currentDayId = appData.days[0]?.id || "day1";
+                    saveData("匯入成功！行程已全面更新");
+                    closeSyncModal();
+                    renderAll();
+                } else {
+                    showToast("格式不正確，請確認複製完整的代碼");
+                }
+            } catch (e) {
+                showToast("JSON 解析失敗，請檢查貼上的內容");
+            }
+        }
+
+        function resetToDefaultData() {
+            appData = JSON.parse(JSON.stringify(DEFAULT_TRIP_DATA));
+            currentDayId = appData.days[0].id;
+            saveData("已還原為預設範例行程");
+            closeSyncModal();
+            renderAll();
+        }
+
+        function escapeHtml(str) {
+            if (!str) return "";
+            return String(str)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        // 啟動渲染
+        window.onload = function () {
+            renderAll();
+        };
+    </script>
+</body>
+</html>
