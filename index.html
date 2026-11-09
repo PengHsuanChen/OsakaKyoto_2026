@@ -109,7 +109,7 @@
                             <span id="currentDayBadge" class="px-2.5 py-0.5 text-xs font-extrabold rounded-lg bg-indigo-100 text-indigo-700 whitespace-nowrap shrink-0">Day 1</span>
                             <span id="currentDayStats" class="text-[11px] font-medium text-slate-400 whitespace-nowrap shrink-0">共 4 個行程點</span>
                         </div>
-                        <h2 id="currentDayTheme" class="text-sm font-bold text-slate-800 mt-1.5 leading-snug break-words">抵達大阪・道頓堀美食漫步</h2>
+                        <h2 id="currentDayTheme" class="text-sm font-bold text-slate-800 mt-1.5 leading-snug break-words">抵達大阪・市區逛街</h2>
                     </div>
                     <button onclick="openDayInfoModal()" class="px-2.5 py-1.5 text-xs font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-xl transition whitespace-nowrap shrink-0 flex items-center gap-1">
                         <i class="fa-solid fa-calendar-day"></i>
@@ -259,7 +259,7 @@
             </div>
             <form onsubmit="saveDayInfo(event)" class="p-5 space-y-3.5 text-sm">
                 <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">日期標示 (例如：11/12 (四) 或 Day 1)</label>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">日期標示 (例如：11/24 (週二) 或 Day 1)</label>
                     <input type="text" id="dayDateInput" required class="w-full rounded-xl border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
                 </div>
                 <div>
@@ -356,11 +356,11 @@
                         </button>
                     </div>
                     <p class="text-[11px] text-sky-800 leading-normal">
-                        1. 點上方複製程式碼，至試算表<strong>「擴充功能 ➔ Apps Script」</strong>貼上並部署為<strong>網頁應用程式（誰可以存取：所有人）</strong>。<br>
-                        2. 將產生的 <code>https://script.google.com/macros/s/.../exec</code> 網址貼在下方：
+                        1. 點上方複製程式碼，至試算表<strong>「擴充功能 ➔ Apps Script」</strong>貼上並點選<strong>「部署 ➔ 新增部署作業」</strong>（類型：網頁應用程式、誰可以存取：所有人）。<br>
+                        2. 將新產生的正式 <code>https://script.google.com/macros/s/.../exec</code> 網址貼在下方：
                     </p>
                     <div>
-                        <input type="url" id="gasWebhookUrlInput" placeholder="貼上 https://script.google.com/macros/s/.../exec" class="w-full rounded-xl border border-sky-300 px-3 py-2 bg-white text-slate-800 font-mono text-[11px] focus:outline-none focus:ring-2 focus:ring-sky-500">
+                        <input type="url" id="gasWebhookUrlInput" placeholder="貼上正式部署產生的 .../exec 網址" class="w-full rounded-xl border border-sky-300 px-3 py-2 bg-white text-slate-800 font-mono text-[11px] focus:outline-none focus:ring-2 focus:ring-sky-500">
                     </div>
                     <div class="flex items-center gap-2 pt-1">
                         <button type="button" onclick="saveGasWebhookUrl()" class="flex-1 py-2.5 px-3 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-bold flex items-center justify-center gap-1.5 shadow-xs">
@@ -402,13 +402,14 @@
         // ★ 雲端 Google Sheets 資料庫設定
         // =========================================================================
         const DEFAULT_GOOGLE_SHEET_ID = "1XTvBaVSwZX6kwla7PAq1I46VDqBcoQjScKDEZH_tcn8";
-        // 若你有固定的 Apps Script 部署網址，也可以直接貼在下方雙引號內，換手機或匯出到 GitHub 就不用重貼：
+        // 請務必貼上由「部署 ➔ 新增部署作業」產生的正式 /exec 網址（非 /dev 網址直接改字）：
         const DEFAULT_GAS_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbzuJM3oJQNHEFhZaqEIBGMOAHSnDL3RuKw-DInQJKU/exec";
         const SHEET_ID_STORAGE_KEY = "TRAVEL_APP_GOOGLE_SHEET_ID_V1";
-        const GAS_URL_STORAGE_KEY = "TRAVEL_APP_GAS_URL_V1";
+        const GAS_URL_STORAGE_KEY = "TRAVEL_APP_GAS_URL_V2";
 
         // =========================================================================
         // ★ 預設離線備份行程資料庫 (5天4夜完整行程規劃表)
+        // =========================================================================
         const DEFAULT_TRIP_DATA = {
             tripTitle: "2026 京阪神奈秋日自由行",
             tripSubtitle: "5天4夜・勝尾寺與紅葉和服寫真",
@@ -682,7 +683,13 @@
 
         const STORAGE_KEY = "TRAVEL_ITINERARY_APP_DATA_V5";
         let currentSheetId = localStorage.getItem(SHEET_ID_STORAGE_KEY) || DEFAULT_GOOGLE_SHEET_ID;
-        let currentGasUrl = localStorage.getItem(GAS_URL_STORAGE_KEY) || DEFAULT_GAS_WEBHOOK_URL;
+        let savedGasUrl = localStorage.getItem(GAS_URL_STORAGE_KEY) || "";
+        // 自動過濾掉舊快取裡殘留的 /dev 無效網址
+        if (savedGasUrl.endsWith("/dev")) {
+            savedGasUrl = "";
+            localStorage.removeItem(GAS_URL_STORAGE_KEY);
+        }
+        let currentGasUrl = savedGasUrl || DEFAULT_GAS_WEBHOOK_URL;
         let appData = loadData();
         let currentDayId = appData.days[0]?.id || "day1";
         let currentCategoryFilter = "全部";
@@ -760,9 +767,15 @@
             if (!currentGasUrl || !currentGasUrl.startsWith("https://script.google.com/")) {
                 setSheetSyncStatus("error", "⚠️ 尚未啟用自動寫回（點右上角「設定」貼上橋接網址）");
                 if (manualClick) {
-                    showToast("請先在設定視窗完成步驟 2 貼上 Apps Script 網址，即可永久自動同步！");
+                    showToast("請先在設定視窗貼上 Apps Script 正式 /exec 網址！");
                     openSheetSyncModal();
                 }
+                return;
+            }
+
+            if (currentGasUrl.endsWith("/dev")) {
+                setSheetSyncStatus("error", "⚠️ /dev 為測試網址無法寫入，請改用 /exec 正式網址");
+                showToast("⚠️ 請至 Apps Script 點「新增部署作業」取得 /exec 結尾的網址");
                 return;
             }
 
@@ -785,7 +798,6 @@
                 const dayTheme = `${dayObj.date || dayLabel}・${dayObj.theme || ""}`;
 
                 if (dayItems.length === 0) {
-                    // 即使該天還沒有行程點，也保留該天的標題列在試算表中
                     rows.push([dayLabel, dayTheme, "", "", "", "", "", "", "", "", "", ""]);
                 } else {
                     dayItems.forEach(item => {
@@ -811,6 +823,7 @@
                 await fetch(currentGasUrl, {
                     method: "POST",
                     mode: "no-cors",
+                    redirect: "follow",
                     headers: { "Content-Type": "text/plain;charset=utf-8" },
                     body: JSON.stringify({
                         sheetId: currentSheetId,
@@ -821,8 +834,8 @@
                 });
 
                 const nowStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                setSheetSyncStatus("success", `⚡ 已自動同步至 Google Sheets (${nowStr})`);
-                showToast("⚡ 已儲存並自動同步至 Google Sheets！");
+                setSheetSyncStatus("success", `⚡ 已發送同步至 Google Sheets (${nowStr})`);
+                showToast("⚡ 已儲存並同步至 Google Sheets！");
             } catch (err) {
                 setSheetSyncStatus("error", "⚠️ 自動同步失敗，請檢查 Apps Script 網址");
                 showToast("⚠️ 本地已儲存，但雲端同步失敗");
@@ -865,6 +878,10 @@
             const rawUrl = inputEl ? inputEl.value.trim() : "";
             if (!rawUrl || !rawUrl.startsWith("https://script.google.com/")) {
                 showToast("請貼上正確的 https://script.google.com/... 網頁應用程式網址");
+                return;
+            }
+            if (rawUrl.endsWith("/dev")) {
+                showToast("⚠️ 這是 /dev 測試網址，請點「新增部署作業」取得 /exec 正式網址！");
                 return;
             }
             currentGasUrl = rawUrl;
@@ -960,7 +977,7 @@
                     if (showManualToast) showToast("✅ 已成功從 Google Sheets 載入最新行程！");
                 } else {
                     setSheetSyncStatus("success", "試算表目前為空（顯示內建預設行程）");
-                    if (showManualToast) showToast("💡 試算表目前是空的，請先點擊「寫回雲端」或貼上表格內容");
+                    if (showManualToast) showToast("💡 試算表目前是空的，請先在設定視窗綁定 Apps Script 網址同步");
                 }
             } catch (err) {
                 setSheetSyncStatus("error", "離線模式（顯示本地快取行程）");
@@ -1405,48 +1422,6 @@
             document.execCommand("copy");
             document.body.removeChild(tempInput);
             showToast("已複製行程 JSON 代碼！");
-        }
-
-        function copyAsTSVForSheet() {
-            const headers = [
-                "Day", "日期與主題", "時間", "類別", "景點或餐廳名稱",
-                "地點區域", "通勤時長與方式", "預估費用(日圓)", "付款與刷卡備註",
-                "行程備註與重點", "GoogleMaps連結", "官網或訂位連結"
-            ];
-
-            const rows = [headers.join("\t")];
-
-            appData.items.forEach(item => {
-                const dayObj = appData.days.find(d => d.id === item.dayId) || { label: "Day 1", date: "Day 1", theme: "" };
-                const dayLabel = dayObj.label || "Day 1";
-                const dayTheme = `${dayObj.date || dayLabel}・${dayObj.theme || ""}`;
-                const clean = (val) => String(val ?? "").replace(/[\t\r\n]+/g, " ").trim();
-
-                const cols = [
-                    clean(dayLabel),
-                    clean(dayTheme),
-                    clean(item.time),
-                    clean(item.category),
-                    clean(item.title),
-                    clean(item.area),
-                    clean(item.commute),
-                    clean(item.costAmount || 0),
-                    clean(item.costTip),
-                    clean(item.notes),
-                    clean(item.mapUrl),
-                    clean(item.webUrl)
-                ];
-                rows.push(cols.join("\t"));
-            });
-
-            const tsvString = rows.join("\n");
-            const tempInput = document.createElement("textarea");
-            tempInput.value = tsvString;
-            document.body.appendChild(tempInput);
-            tempInput.select();
-            document.execCommand("copy");
-            document.body.removeChild(tempInput);
-            showToast("✅ 已複製表格！請打開 Google Sheets 點擊左上角 A1 按 Ctrl+V 貼上");
         }
 
         function importJsonData() {
