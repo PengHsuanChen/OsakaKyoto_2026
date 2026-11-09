@@ -344,6 +344,32 @@
                     </div>
                 </div>
 
+                <!-- 雙向自動寫回設定區塊 (Google Apps Script) -->
+                <div class="p-3.5 rounded-2xl bg-sky-50 border border-sky-200 text-sky-900 space-y-2.5">
+                    <div class="flex items-center justify-between">
+                        <p class="font-bold text-sm flex items-center gap-1.5">
+                            <i class="fa-solid fa-bolt text-amber-500"></i>
+                            <span>啟用「App 修改自動寫回試算表」</span>
+                        </p>
+                        <button type="button" onclick="copyGasScriptCode()" class="px-2.5 py-1 rounded-lg bg-sky-600 hover:bg-sky-500 text-white font-bold text-[11px]">
+                            📋 複製橋接程式碼
+                        </button>
+                    </div>
+                    <p class="text-[11px] text-sky-800 leading-normal">
+                        1. 點上方複製程式碼，至試算表<strong>「擴充功能 ➔ Apps Script」</strong>貼上並部署為<strong>網頁應用程式（誰可以存取：所有人）</strong>。<br>
+                        2. 將產生的 <code>https://script.google.com/macros/s/.../exec</code> 網址貼在下方：
+                    </p>
+                    <div>
+                        <input type="url" id="gasWebhookUrlInput" placeholder="貼上 https://script.google.com/macros/s/.../exec" class="w-full rounded-xl border border-sky-300 px-3 py-2 bg-white text-slate-800 font-mono text-[11px] focus:outline-none focus:ring-2 focus:ring-sky-500">
+                    </div>
+                    <div class="flex items-center gap-2 pt-1">
+                        <button type="button" onclick="saveGasWebhookUrl()" class="flex-1 py-2.5 px-3 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-bold flex items-center justify-center gap-1.5 shadow-xs">
+                            <i class="fa-solid fa-cloud-arrow-up"></i>
+                            <span>儲存網址並立即同步至試算表</span>
+                        </button>
+                    </div>
+                </div>
+
                 <!-- 手動 JSON 匯出匯入區 -->
                 <div class="space-y-2 pt-2 border-t border-slate-200">
                     <label class="block font-bold text-slate-700">手動匯出 / 匯入 JSON 行程代碼：</label>
@@ -376,6 +402,8 @@
         // ★ 雲端 Google Sheets 資料庫設定
         // =========================================================================
         const DEFAULT_GOOGLE_SHEET_ID = "1XTvBaVSwZX6kwla7PAq1I46VDqBcoQjScKDEZH_tcn8";
+        // 若你有固定的 Apps Script 部署網址，也可以直接貼在下方雙引號內，換手機或匯出到 GitHub 就不用重貼：
+        const DEFAULT_GAS_WEBHOOK_URL = "";
         const SHEET_ID_STORAGE_KEY = "TRAVEL_APP_GOOGLE_SHEET_ID_V1";
         const GAS_URL_STORAGE_KEY = "TRAVEL_APP_GAS_URL_V1";
 
@@ -654,7 +682,7 @@
 
         const STORAGE_KEY = "TRAVEL_ITINERARY_APP_DATA_V5";
         let currentSheetId = localStorage.getItem(SHEET_ID_STORAGE_KEY) || DEFAULT_GOOGLE_SHEET_ID;
-        let currentGasUrl = localStorage.getItem(GAS_URL_STORAGE_KEY) || "";
+        let currentGasUrl = localStorage.getItem(GAS_URL_STORAGE_KEY) || DEFAULT_GAS_WEBHOOK_URL;
         let appData = loadData();
         let currentDayId = appData.days[0]?.id || "day1";
         let currentCategoryFilter = "全部";
@@ -674,10 +702,13 @@
             return JSON.parse(JSON.stringify(DEFAULT_TRIP_DATA));
         }
 
-        function saveData(toastText = "已自動儲存變更") {
+        function saveData(toastText = "已自動儲存變更", syncToCloud = true) {
             try {
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
                 if (toastText) showToast(toastText);
+                if (syncToCloud) {
+                    pushToGoogleSheet(false);
+                }
             } catch (e) {
                 console.warn("儲存失敗", e);
             }
@@ -1345,6 +1376,8 @@
 
         function openSheetSyncModal() {
             document.getElementById("sheetIdInput").value = currentSheetId;
+            const gasInput = document.getElementById("gasWebhookUrlInput");
+            if (gasInput) gasInput.value = currentGasUrl || "";
             document.getElementById("importJsonTextarea").value = "";
             updateSheetLinksUI();
             document.getElementById("syncModal").classList.remove("hidden");
