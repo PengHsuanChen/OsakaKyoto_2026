@@ -4,39 +4,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>隨身旅遊行程 App</title>
-    <!-- PWA / 加入主畫面設定 -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="旅遊行程">
     <meta name="theme-color" content="#0f172a">
-
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
     <style>
         body {
             font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, sans-serif;
             background-color: #0f172a;
             -webkit-tap-highlight-color: transparent;
         }
-        .no-scrollbar::-webkit-scrollbar {
-            display: none;
-        }
-        .no-scrollbar {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(8px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        .card-animate {
-            animation: fadeIn 0.22s ease-out forwards;
-        }
+        .card-animate { animation: fadeIn 0.22s ease-out forwards; }
     </style>
 </head>
 <body class="text-slate-800 antialiased selection:bg-indigo-500 selection:text-white">
@@ -47,7 +34,6 @@
         <!-- 頂部固定導覽與天數切換區 -->
         <header class="sticky top-0 z-30 bg-slate-900 text-white shadow-lg rounded-b-3xl">
             <div class="px-4 pt-3.5 pb-2.5">
-                <!-- 標題與雲端操作按鈕 -->
                 <div class="flex items-center justify-between gap-2">
                     <div class="flex items-center gap-2.5 min-w-0">
                         <div class="w-9 h-9 rounded-2xl bg-indigo-500/20 border border-indigo-400/30 flex items-center justify-center text-indigo-300 shrink-0">
@@ -80,27 +66,19 @@
                 </div>
 
                 <!-- 雲端同步狀態提示條 -->
-                <div class="mt-2 flex items-center justify-between bg-slate-800/80 border border-slate-700/70 rounded-xl px-2.5 py-1 text-[11px]">
+                <div class="mt-2 flex items-center bg-slate-800/80 border border-slate-700/70 rounded-xl px-2.5 py-1 text-[11px]">
                     <div id="sheetSyncStatusText" class="flex items-center gap-1.5 text-slate-300 truncate">
                         <span class="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span>
                         <span>以 Google Sheets 試算表內容為主</span>
                     </div>
-                    <a id="openSheetDirectLink" href="https://docs.google.com/spreadsheets/d/1XTvBaVSwZX6kwla7PAq1I46VDqBcoQjScKDEZH_tcn8/edit" target="_blank" rel="noopener noreferrer" class="text-emerald-400 hover:text-emerald-300 font-semibold shrink-0 ml-2 flex items-center gap-1">
-                        <span>打開試算表</span>
-                        <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
-                    </a>
                 </div>
 
                 <!-- 類別快速篩選列 -->
-                <div class="flex items-center gap-1.5 mt-2.5 overflow-x-auto no-scrollbar pb-1" id="categoryFilterBar">
-                    <!-- JS 動態生成 -->
-                </div>
+                <div class="flex items-center gap-1.5 mt-2.5 overflow-x-auto no-scrollbar pb-1" id="categoryFilterBar"></div>
             </div>
 
             <!-- Day 切換水平滑動列 -->
-            <div class="px-3 pb-3 pt-1 flex items-center gap-2 overflow-x-auto no-scrollbar" id="dayTabsContainer">
-                <!-- JS 動態生成 -->
-            </div>
+            <div class="px-3 pb-3 pt-1 flex items-center gap-2 overflow-x-auto no-scrollbar" id="dayTabsContainer"></div>
         </header>
 
         <!-- 當日摘要與總費用統計橫幅 -->
@@ -110,7 +88,7 @@
                     <div class="min-w-0 flex-1">
                         <div class="flex items-center gap-2">
                             <span id="currentDayBadge" class="px-2.5 py-0.5 text-xs font-extrabold rounded-lg bg-indigo-100 text-indigo-700 whitespace-nowrap shrink-0">Day 1</span>
-                            <span id="currentDayStats" class="text-[11px] font-medium text-slate-400 whitespace-nowrap shrink-0">共 4 個行程點</span>
+                            <span id="currentDayStats" class="text-[11px] font-medium text-slate-400 whitespace-nowrap shrink-0">共 0 個行程點</span>
                         </div>
                         <h2 id="currentDayTheme" class="text-sm font-bold text-slate-800 mt-1.5 leading-snug break-words">抵達大阪・市區逛街</h2>
                     </div>
@@ -136,9 +114,7 @@
         </div>
 
         <!-- 行程時間軸卡片列表 -->
-        <main class="flex-1 px-4 py-3 space-y-3" id="itineraryListContainer">
-            <!-- JS 動態生成卡片 -->
-        </main>
+        <main class="flex-1 px-4 py-3 space-y-3" id="itineraryListContainer"></main>
 
         <!-- 底部懸浮操作列 -->
         <div class="fixed bottom-0 left-0 right-0 z-20 pointer-events-none">
@@ -155,7 +131,7 @@
         </div>
     </div>
 
-    <!-- 彈出視窗 7：編輯密碼鎖 (PIN 碼驗證) Modal -->
+    <!-- 彈出視窗：編輯密碼鎖 (PIN 碼驗證) -->
     <div id="pinLockModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs hidden flex items-center justify-center p-4">
         <div class="bg-white w-full max-w-xs rounded-3xl shadow-2xl overflow-hidden card-animate">
             <div class="px-5 py-4 bg-slate-900 text-white flex items-center justify-between">
@@ -185,10 +161,9 @@
         </div>
     </div>
 
-    <!-- 彈出視窗 6：獨立分天記帳本 Modal -->
+    <!-- 彈出視窗：獨立分天記帳本 -->
     <div id="expenseModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
         <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[92vh] flex flex-col overflow-hidden card-animate">
-            <!-- 標題列 -->
             <div class="px-5 py-4 bg-slate-900 text-white flex items-center justify-between shrink-0">
                 <div class="flex items-center gap-2">
                     <div class="w-8 h-8 rounded-xl bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-emerald-300">
@@ -204,12 +179,8 @@
                 </button>
             </div>
 
-            <!-- 記帳本天數切換列 -->
-            <div class="px-4 py-2.5 bg-slate-100 border-b border-slate-200 flex items-center gap-1.5 overflow-x-auto no-scrollbar shrink-0" id="expenseDayTabs">
-                <!-- JS 動態生成 Day 1 ~ Day 5 -->
-            </div>
+            <div class="px-4 py-2.5 bg-slate-100 border-b border-slate-200 flex items-center gap-1.5 overflow-x-auto no-scrollbar shrink-0" id="expenseDayTabs"></div>
 
-            <!-- 記帳本統計摘要橫幅 (兩行顯示：當日已消費 & 總共消費金額) -->
             <div class="px-4 py-3 bg-emerald-50/70 border-b border-emerald-100 space-y-1.5 text-xs shrink-0">
                 <div class="flex items-center justify-between">
                     <span class="font-bold text-emerald-900 flex items-center gap-1.5">
@@ -227,7 +198,6 @@
                 </div>
             </div>
 
-            <!-- 新增花費輸入表單 -->
             <form id="expenseForm" onsubmit="saveExpenseForm(event)" class="p-4 bg-slate-50 border-b border-slate-200 space-y-2.5 text-xs shrink-0">
                 <input type="hidden" id="editExpenseId">
                 <div class="grid grid-cols-12 gap-2">
@@ -262,14 +232,11 @@
                 </div>
             </form>
 
-            <!-- 當日花費明細列表 -->
-            <div class="flex-1 p-4 overflow-y-auto space-y-2" id="expenseListContainer">
-                <!-- JS 動態生成該天消費明細 -->
-            </div>
+            <div class="flex-1 p-4 overflow-y-auto space-y-2" id="expenseListContainer"></div>
         </div>
     </div>
 
-    <!-- 彈出視窗 1：新增 / 編輯行程點 -->
+    <!-- 彈出視窗：新增 / 編輯行程點 -->
     <div id="itemModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
         <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[92vh] flex flex-col overflow-hidden card-animate">
             <div class="px-5 py-4 bg-slate-900 text-white flex items-center justify-between">
@@ -284,9 +251,7 @@
 
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 mb-1">所屬天數 *</label>
-                    <select id="itemDayId" class="w-full rounded-xl border border-indigo-300 bg-indigo-50/60 text-indigo-950 font-bold px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                        <!-- JS 動態生成天數選項 -->
-                    </select>
+                    <select id="itemDayId" class="w-full rounded-xl border border-indigo-300 bg-indigo-50/60 text-indigo-950 font-bold px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"></select>
                 </div>
 
                 <div class="grid grid-cols-2 gap-3">
@@ -311,7 +276,6 @@
                     <input type="text" id="itemTitle" required placeholder="例如：清水寺、一蘭拉麵、HARUKA 特急" class="w-full rounded-xl border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
                 </div>
 
-                <!-- 通勤時長與交通方式欄位 -->
                 <div class="p-3 rounded-2xl bg-sky-50 border border-sky-200/80 space-y-1.5">
                     <label class="block text-xs font-bold text-sky-800">
                         <i class="fa-solid fa-train-subway mr-1"></i>抵達此處的通勤時長 & 交通方式
@@ -319,7 +283,6 @@
                     <input type="text" id="itemCommute" placeholder="例如：地鐵御堂筋線 15 分鐘 / 步行 8 分鐘" class="w-full rounded-xl border border-sky-300 bg-white px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-sky-500">
                 </div>
 
-                <!-- 預估費用與付款備註欄位 -->
                 <div class="p-3 rounded-2xl bg-emerald-50 border border-emerald-200/80 grid grid-cols-2 gap-2.5">
                     <div>
                         <label class="block text-xs font-bold text-emerald-800 mb-1">
@@ -374,7 +337,7 @@
         </div>
     </div>
 
-    <!-- 彈出視窗 2：修改當日日期與主題 -->
+    <!-- 彈出視窗：修改當日日期與主題 -->
     <div id="dayInfoModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs hidden flex items-center justify-center p-4">
         <div class="bg-white w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden card-animate">
             <div class="px-5 py-4 bg-slate-900 text-white flex items-center justify-between">
@@ -405,7 +368,7 @@
         </div>
     </div>
 
-    <!-- 彈出視窗 3：修改總旅程標題 -->
+    <!-- 彈出視窗：修改總旅程標題 -->
     <div id="tripTitleModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs hidden flex items-center justify-center p-4">
         <div class="bg-white w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden card-animate">
             <div class="px-5 py-4 bg-slate-900 text-white flex items-center justify-between">
@@ -431,7 +394,7 @@
         </div>
     </div>
 
-    <!-- 彈出視窗 4：Google Sheets 雲端資料庫設定與備份 -->
+    <!-- 彈出視窗：Google Sheets 雲端資料庫設定與備份 -->
     <div id="syncModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs hidden flex items-center justify-center p-4">
         <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden card-animate max-h-[90vh] flex flex-col">
             <div class="px-5 py-4 bg-slate-900 text-white flex items-center justify-between">
@@ -444,17 +407,11 @@
                 </button>
             </div>
             <div class="p-5 overflow-y-auto space-y-4 text-xs text-slate-600 leading-relaxed">
-                <!-- 綁定 Google Sheet 區塊 -->
                 <div class="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 space-y-2.5">
-                    <div class="flex items-center justify-between">
-                        <p class="font-bold text-sm flex items-center gap-1.5">
-                            <i class="fa-solid fa-link text-emerald-600"></i>
-                            <span>綁定 Google Sheets 試算表</span>
-                        </p>
-                        <a id="modalSheetLink" href="https://docs.google.com/spreadsheets/d/1XTvBaVSwZX6kwla7PAq1I46VDqBcoQjScKDEZH_tcn8/edit" target="_blank" rel="noopener noreferrer" class="px-2.5 py-1 rounded-lg bg-emerald-600 text-white font-bold text-[11px] hover:bg-emerald-500">
-                            開啟試算表 <i class="fa-solid fa-up-right-from-square ml-0.5"></i>
-                        </a>
-                    </div>
+                    <p class="font-bold text-sm flex items-center gap-1.5">
+                        <i class="fa-solid fa-link text-emerald-600"></i>
+                        <span>綁定 Google Sheets 試算表</span>
+                    </p>
                     <p class="text-[11px] text-emerald-800">
                         請確認試算表共用權限已設為<strong>「知道連結的任何人可檢視」</strong>。
                     </p>
@@ -470,7 +427,6 @@
                     </div>
                 </div>
 
-                <!-- 雙向自動寫回設定區塊 (Google Apps Script 含密碼鎖) -->
                 <div class="p-3.5 rounded-2xl bg-sky-50 border border-sky-200 text-sky-900 space-y-2.5">
                     <div class="flex items-center justify-between">
                         <p class="font-bold text-sm flex items-center gap-1.5">
@@ -483,7 +439,7 @@
                     </div>
                     <p class="text-[11px] text-sky-800 leading-normal">
                         1. 點上方複製新版程式碼，至試算表<strong>「擴充功能 ➔ Apps Script」</strong>覆蓋貼上。<br>
-                        2. 修改程式碼第一行的 <code>SECRET_PIN = "2026"</code> 為你專屬的密碼（此密碼只存在 Google 後端，不會在 GitHub 曝光）。<br>
+                        2. 修改程式碼第一行的 <code>SECRET_PIN = "2026"</code> 為你專屬的密碼。<br>
                         3. 點選<strong>「部署 ➔ 管理部署作業 ➔ 編輯(鉛筆) ➔ 版本選『新版本』➔ 部署」</strong>。
                     </p>
                     <div>
@@ -497,7 +453,6 @@
                     </div>
                 </div>
 
-                <!-- 手動 JSON 匯出匯入區 -->
                 <div class="space-y-2 pt-2 border-t border-slate-200">
                     <label class="block font-bold text-slate-700">手動匯出 / 匯入 JSON 行程代碼：</label>
                     <button type="button" onclick="copyCurrentJson()" class="w-full py-2 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold flex items-center justify-center gap-2">
@@ -505,20 +460,15 @@
                         <span>複製目前行程 JSON 代碼</span>
                     </button>
                     <textarea id="importJsonTextarea" rows="2" placeholder="在此貼上行程 JSON 代碼以還原..." class="w-full rounded-xl border border-slate-300 p-2.5 font-mono text-[11px] focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
-                    <div class="flex gap-2">
-                        <button type="button" onclick="importJsonData()" class="flex-1 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold">
-                            確認匯入套用
-                        </button>
-                        <button type="button" onclick="resetToDefaultData()" class="px-3 py-2 rounded-xl border border-rose-200 text-rose-600 hover:bg-rose-50 font-semibold">
-                            還原預設範例
-                        </button>
-                    </div>
+                    <button type="button" onclick="importJsonData()" class="w-full py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold">
+                        確認匯入套用
+                    </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- 彈出視窗 5：確認刪除行程提示視窗 -->
+    <!-- 彈出視窗：確認刪除行程提示視窗 -->
     <div id="deleteConfirmModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs hidden flex items-center justify-center p-4">
         <div class="bg-white w-full max-w-xs rounded-3xl shadow-2xl overflow-hidden card-animate p-5 text-center space-y-4">
             <div class="w-12 h-12 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center mx-auto text-xl">
@@ -547,19 +497,14 @@
     </div>
 
     <script>
-        // =========================================================================
-        // ★ 雲端 Google Sheets 資料庫設定
-        // =========================================================================
         const DEFAULT_GOOGLE_SHEET_ID = "1XTvBaVSwZX6kwla7PAq1I46VDqBcoQjScKDEZH_tcn8";
-        // 正式 /exec 網址已更新：
         const DEFAULT_GAS_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbzdKOJQltbB1Wlq0RCSJbjdSsGuQgwl8Bsjkts7QAP0n8mPSScuzAVzXs_gTxoffNIy/exec";
         const SHEET_ID_STORAGE_KEY = "TRAVEL_APP_GOOGLE_SHEET_ID_V1";
         const GAS_URL_STORAGE_KEY = "TRAVEL_APP_GAS_URL_V2";
         const EDIT_PIN_STORAGE_KEY = "TRAVEL_APP_EDIT_PIN_V1";
+        const STORAGE_KEY = "TRAVEL_ITINERARY_APP_DATA_V5";
 
-        // =========================================================================
-        // ★ 預設離線備份行程資料庫 (5天4夜完整行程規劃表)
-        // =========================================================================
+        // 精簡後僅保留 5 天骨架，詳細行程由 Google Sheets 同步載入
         const DEFAULT_TRIP_DATA = {
             tripTitle: "2026 京阪神奈秋日自由行",
             tripSubtitle: "5天4夜・勝尾寺與紅葉和服寫真",
@@ -570,259 +515,10 @@
                 { id: "day4", label: "Day 4", date: "11/27 (週五)", theme: "奈良古都・草山小鹿" },
                 { id: "day5", label: "Day 5", date: "11/28 (週六)", theme: "大阪古城・啟程返國" }
             ],
-            items: [
-                // Day 1 (11/24 週二)
-                {
-                    id: "item-101",
-                    dayId: "day1",
-                    time: "13:30",
-                    category: "交通",
-                    title: "關西國際機場抵達 ➔ 難波",
-                    area: "關西機場 ➔ 南海難波站",
-                    commute: "南海電鐵 Rapi:t（關西機場至難波，約 38 分鐘）",
-                    costAmount: 1450,
-                    costTip: "Klook 預訂・刷玉山熊本熊卡",
-                    notes: "抵達關西機場，搭乘南海電鐵 Rapi:t 前往難波。",
-                    mapUrl: "https://www.google.com/maps/search/?api=1&query=Kansai+International+Airport",
-                    webUrl: "https://www.howto-osaka.com/tc/"
-                },
-                {
-                    id: "item-102",
-                    dayId: "day1",
-                    time: "14:30",
-                    category: "住宿",
-                    title: "心齋橋飯店 Check-in / 放行李",
-                    area: "大阪心齋橋",
-                    commute: "市區搭乘地鐵御堂筋線至心齋橋站",
-                    costAmount: 0,
-                    costTip: "住宿費已線上付清",
-                    notes: "先至心齋橋飯店辦理入住或寄放行李，輕裝出發逛街。",
-                    mapUrl: "https://www.google.com/maps/search/?api=1&query=Shinsaibashi+Station",
-                    webUrl: ""
-                },
-                {
-                    id: "item-103",
-                    dayId: "day1",
-                    time: "15:30",
-                    category: "景點",
-                    title: "梅田商圈（阪急百貨、Grand Green Osaka 散策）",
-                    area: "大阪梅田",
-                    commute: "市區搭乘地鐵御堂筋線（心齋橋至梅田，約 7 分鐘）",
-                    costAmount: 0,
-                    costTip: "百貨退稅記得攜帶護照",
-                    notes: "逛阪急百貨與全新開幕的 Grand Green Osaka 都會綠洲公園散策。",
-                    mapUrl: "https://www.google.com/maps/search/?api=1&query=Grand+Green+Osaka",
-                    webUrl: "https://umeda-connect.jp/"
-                },
-                {
-                    id: "item-104",
-                    dayId: "day1",
-                    time: "18:30",
-                    category: "餐廳",
-                    title: "傍晚回 心齋橋筋、道頓堀、難波 吃晚餐、逛街",
-                    area: "心齋橋・道頓堀・難波",
-                    commute: "搭乘地鐵御堂筋線返回心齋橋/難波",
-                    costAmount: 4000,
-                    costTip: "現金 / ICOCA / 信用卡",
-                    notes: "沿著心齋橋筋商店街一路逛到道頓堀拍固力果跑跑人、在難波享用晚餐。",
-                    mapUrl: "https://www.google.com/maps/search/?api=1&query=Dotonbori+Osaka",
-                    webUrl: ""
-                },
-
-                // Day 2 (11/25 週三)
-                {
-                    id: "item-201",
-                    dayId: "day2",
-                    time: "09:00",
-                    category: "景點",
-                    title: "心齋橋出發 ➔ 勝尾寺（求達摩、滿山楓葉地毯）",
-                    area: "大阪府箕面市",
-                    commute: "御堂筋線直通北大阪急行至「箕面萱野站」，轉搭路線公車或計程車（約 15 分鐘）上山",
-                    costAmount: 500,
-                    costTip: "門票現金支付・計程車可湊單",
-                    notes: "欣賞秋季限定滿山楓葉地毯與滿滿的小達摩不倒翁，求勝運達摩。",
-                    mapUrl: "https://www.google.com/maps/search/?api=1&query=Katsuo-ji+Temple",
-                    webUrl: "https://katsuo-ji-temple.or.jp/"
-                },
-                {
-                    id: "item-202",
-                    dayId: "day2",
-                    time: "12:30",
-                    category: "景點",
-                    title: "箕面瀑布散策",
-                    area: "箕面國定公園",
-                    commute: "由勝尾寺搭車或計程車前往箕面大日停車場/步道口",
-                    costAmount: 0,
-                    costTip: "免門票・沿途買炸楓葉吃",
-                    notes: "漫步於楓紅溪谷步道，欣賞壯觀的箕面大瀑布。",
-                    mapUrl: "https://www.google.com/maps/search/?api=1&query=Minoo+Waterfall",
-                    webUrl: ""
-                },
-                {
-                    id: "item-203",
-                    dayId: "day2",
-                    time: "16:30",
-                    category: "購物",
-                    title: "下午返回市區（心齋橋／美國村／難波周邊採買與晚餐）",
-                    area: "心齋橋・美國村・難波",
-                    commute: "搭乘北大阪急行直通御堂筋線返回心齋橋站",
-                    costAmount: 6000,
-                    costTip: "刷高回饋信用卡",
-                    notes: "逛心齋橋、美國村潮流小店與難波周邊採買，並享用晚餐。",
-                    mapUrl: "https://www.google.com/maps/search/?api=1&query=Amerikamura+Osaka",
-                    webUrl: ""
-                },
-
-                // Day 3 (11/26 週四)
-                {
-                    id: "item-301",
-                    dayId: "day3",
-                    time: "06:30",
-                    category: "景點",
-                    title: "清水寺晨間無人空景 ➔ 二三年坂",
-                    area: "京都市東山區",
-                    commute: "電車（御堂筋線＋京阪特急）；京都段全程推薦計程車接駁",
-                    costAmount: 500,
-                    costTip: "清水寺門票現金",
-                    notes: "06:30 趁大批遊客抵達前拍攝清水寺晨間無人空景，接著漫步二三年坂古街。",
-                    mapUrl: "https://www.google.com/maps/search/?api=1&query=Kiyomizu-dera+Kyoto",
-                    webUrl: "https://www.kiyomizudera.or.jp/"
-                },
-                {
-                    id: "item-302",
-                    dayId: "day3",
-                    time: "09:30",
-                    category: "餐廳",
-                    title: "祇園朝食",
-                    area: "京都祇園",
-                    commute: "從二三年坂步行或搭計程車前往祇園",
-                    costAmount: 2000,
-                    costTip: "現金或刷卡",
-                    notes: "在京都祇園享用精緻日式早餐或咖啡廳早午餐，補充體力。",
-                    mapUrl: "https://www.google.com/maps/search/?api=1&query=Gion+Kyoto",
-                    webUrl: ""
-                },
-                {
-                    id: "item-303",
-                    dayId: "day3",
-                    time: "12:00",
-                    category: "景點",
-                    title: "一期和服換裝",
-                    area: "京都東山",
-                    commute: "京都段推薦搭乘計程車前往和服店",
-                    costAmount: 8500,
-                    costTip: "依預約方案支付",
-                    notes: "12:00 準時抵達一期和服進行和服挑選與精緻妝髮造型。",
-                    mapUrl: "https://www.google.com/maps/search/?api=1&query=Kyoto+Kimono+Rental",
-                    webUrl: ""
-                },
-                {
-                    id: "item-304",
-                    dayId: "day3",
-                    time: "14:45",
-                    category: "景點",
-                    title: "今熊野觀音寺外拍 ➔ 東福寺臥雲橋遠眺楓海",
-                    area: "京都東山區",
-                    commute: "京都段全程推薦計程車接駁（約 10 分鐘）",
-                    costAmount: 0,
-                    costTip: "臥雲橋免費遠眺",
-                    notes: "14:45 於今熊野觀音寺進行紅葉和服外拍，接著前往東福寺臥雲橋遠眺壯觀通天紅葉海。",
-                    mapUrl: "https://www.google.com/maps/search/?api=1&query=Imakumano+Kannon-ji+Kyoto",
-                    webUrl: ""
-                },
-                {
-                    id: "item-305",
-                    dayId: "day3",
-                    time: "17:30",
-                    category: "景點",
-                    title: "永觀堂夜楓 ➔ 回心齋橋",
-                    area: "京都左京區 ➔ 大阪心齋橋",
-                    commute: "計程車前往永觀堂；回程搭京阪特急＋御堂筋線回心齋橋",
-                    costAmount: 700,
-                    costTip: "夜楓拜觀料現金支付",
-                    notes: "欣賞「紅葉的永觀堂」絕美池泉夜楓倒影，結束後搭電車返回大阪心齋橋。",
-                    mapUrl: "https://www.google.com/maps/search/?api=1&query=Eikando+Zenrin-ji+Kyoto",
-                    webUrl: "https://www.eikando.or.jp/"
-                },
-
-                // Day 4 (11/27 週五)
-                {
-                    id: "item-401",
-                    dayId: "day4",
-                    time: "09:30",
-                    category: "景點",
-                    title: "難波出發 ➔ 近鐵奈良站 ➔ 奈良公園餵鹿",
-                    area: "近鐵奈良・奈良公園",
-                    commute: "大阪難波站搭乘「近鐵奈良線快速急行」（直達近鐵奈良，約 38 分鐘）",
-                    costAmount: 880,
-                    costTip: "車資¥680 (ICOCA) + 鹿仙貝¥200 (現金)",
-                    notes: "直達近鐵奈良站，步行至奈良公園與可愛小鹿互動拍照。",
-                    mapUrl: "https://www.google.com/maps/search/?api=1&query=Nara+Park",
-                    webUrl: ""
-                },
-                {
-                    id: "item-402",
-                    dayId: "day4",
-                    time: "12:00",
-                    category: "景點",
-                    title: "春日大社（萬燈籠與原始林楓葉） ➔ 水谷茶屋喝茶",
-                    area: "奈良春日大社・水谷茶屋",
-                    commute: "奈良公園內步行散步前往",
-                    costAmount: 1500,
-                    costTip: "茶屋消費與參拜準備現金",
-                    notes: "參拜世界遺產春日大社萬燈籠與原始林楓葉，接著在童話茅草屋「水谷茶屋」喝茶歇息。",
-                    mapUrl: "https://www.google.com/maps/search/?api=1&query=Mizutani-chaya+Nara",
-                    webUrl: "https://www.kasugataisha.or.jp/"
-                },
-                {
-                    id: "item-403",
-                    dayId: "day4",
-                    time: "15:30",
-                    category: "景點",
-                    title: "若草山賞夕陽俯瞰古都 ➔ 傍晚返回難波/心齋橋吃燒肉",
-                    area: "奈良若草山 ➔ 大阪難波",
-                    commute: "步行登若草山；傍晚搭近鐵奈良線快速急行返回大阪難波站（約 38 分鐘）",
-                    costAmount: 6150,
-                    costTip: "若草山門票¥150 + 難波燒肉晚餐約¥6,000",
-                    notes: "登上若草山一邊看小鹿一邊俯瞰奈良古都絕美夕陽，傍晚回難波/心齋橋大啖燒肉。",
-                    mapUrl: "https://www.google.com/maps/search/?api=1&query=Mount+Wakakusa",
-                    webUrl: ""
-                },
-
-                // Day 5 (11/28 週六)
-                {
-                    id: "item-501",
-                    dayId: "day5",
-                    time: "08:30",
-                    category: "景點",
-                    title: "行李寄放飯店櫃檯 ➔ 大阪城公園 ＋ 天守閣（秋季金黃銀杏林大道）",
-                    area: "大阪城公園",
-                    commute: "長堀鶴見綠地線至「森之宮站」",
-                    costAmount: 600,
-                    costTip: "天守閣門票¥600 (可刷卡或ICOCA)",
-                    notes: "08:30 先將行李寄放心齋橋飯店櫃檯，搭地鐵前往大阪城公園欣賞壯觀的金黃銀杏林大道與天守閣。",
-                    mapUrl: "https://www.google.com/maps/search/?api=1&query=Osaka+Castle+Park",
-                    webUrl: "https://www.osakacastle.net/"
-                },
-                {
-                    id: "item-502",
-                    dayId: "day5",
-                    time: "11:30",
-                    category: "交通",
-                    title: "回心齋橋取行李 ➔ 難波搭車直達關西機場 ➔ 返程",
-                    area: "心齋橋 ➔ 難波 ➔ 關西國際機場",
-                    commute: "地鐵回心齋橋取行李；難波搭南海電鐵直達關西機場（約 38 分鐘）",
-                    costAmount: 1450,
-                    costTip: "南海電鐵特急 Rapi:t",
-                    notes: "11:30 準時回心齋橋飯店領取行李，由難波站搭乘南海電鐵直達關西機場辦理登機返國。",
-                    mapUrl: "https://www.google.com/maps/search/?api=1&query=Kansai+International+Airport",
-                    webUrl: "https://www.howto-osaka.com/tc/"
-                }
-            ],
+            items: [],
             expenses: []
         };
 
-        // 記帳分類圖示與顏色設定
         const EXPENSE_CATEGORY_CONFIG = {
             "餐飲": { icon: "fa-utensils", bg: "bg-orange-100", text: "text-orange-700" },
             "購物": { icon: "fa-bag-shopping", bg: "bg-pink-100", text: "text-pink-700" },
@@ -832,20 +528,17 @@
             "其他": { icon: "fa-coins", bg: "bg-emerald-100", text: "text-emerald-700" }
         };
 
-        // 類別樣式設定
         const CATEGORY_CONFIG = {
-            "全部": { icon: "fa-layer-group", badgeBg: "bg-slate-100", badgeText: "text-slate-700", dot: "bg-slate-500" },
-            "景點": { icon: "fa-camera-retro", badgeBg: "bg-indigo-100", badgeText: "text-indigo-700", dot: "bg-indigo-500" },
-            "餐廳": { icon: "fa-utensils", badgeBg: "bg-orange-100", badgeText: "text-orange-700", dot: "bg-orange-500" },
-            "交通": { icon: "fa-train-subway", badgeBg: "bg-sky-100", badgeText: "text-sky-700", dot: "bg-sky-500" },
-            "購物": { icon: "fa-bag-shopping", badgeBg: "bg-pink-100", badgeText: "text-pink-700", dot: "bg-pink-500" },
-            "住宿": { icon: "fa-bed", badgeBg: "bg-purple-100", badgeText: "text-purple-700", dot: "bg-purple-500" }
+            "全部": { icon: "fa-layer-group", badgeBg: "bg-slate-100", badgeText: "text-slate-700" },
+            "景點": { icon: "fa-camera-retro", badgeBg: "bg-indigo-100", badgeText: "text-indigo-700" },
+            "餐廳": { icon: "fa-utensils", badgeBg: "bg-orange-100", badgeText: "text-orange-700" },
+            "交通": { icon: "fa-train-subway", badgeBg: "bg-sky-100", badgeText: "text-sky-700" },
+            "購物": { icon: "fa-bag-shopping", badgeBg: "bg-pink-100", badgeText: "text-pink-700" },
+            "住宿": { icon: "fa-bed", badgeBg: "bg-purple-100", badgeText: "text-purple-700" }
         };
 
-        const STORAGE_KEY = "TRAVEL_ITINERARY_APP_DATA_V5";
         let currentSheetId = localStorage.getItem(SHEET_ID_STORAGE_KEY) || DEFAULT_GOOGLE_SHEET_ID;
         let savedGasUrl = localStorage.getItem(GAS_URL_STORAGE_KEY) || "";
-        // 自動過濾掉舊快取裡殘留的 /dev 無效網址
         if (savedGasUrl.endsWith("/dev")) {
             savedGasUrl = "";
             localStorage.removeItem(GAS_URL_STORAGE_KEY);
@@ -859,9 +552,6 @@
         let currentExpenseDayId = currentDayId;
         let currentCategoryFilter = "全部";
 
-        // =========================================================================
-        // ★ 方案一：編輯密碼鎖 (PIN 碼) 控制邏輯
-        // =========================================================================
         function updatePinLockUI() {
             const btn = document.getElementById("pinLockStatusBtn");
             const icon = document.getElementById("pinLockIcon");
@@ -927,9 +617,7 @@
                         return parsed;
                     }
                 }
-            } catch (e) {
-                console.warn("讀取本地儲存失敗，使用預設行程", e);
-            }
+            } catch (e) {}
             return JSON.parse(JSON.stringify(DEFAULT_TRIP_DATA));
         }
 
@@ -937,12 +625,8 @@
             try {
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
                 if (toastText) showToast(toastText);
-                if (syncToCloud) {
-                    pushToGoogleSheet(false);
-                }
-            } catch (e) {
-                console.warn("儲存失敗", e);
-            }
+                if (syncToCloud) pushToGoogleSheet(false);
+            } catch (e) {}
         }
 
         function showToast(message) {
@@ -966,14 +650,6 @@
             return match ? match[1] : trimmed;
         }
 
-        function updateSheetLinksUI() {
-            const sheetUrl = `https://docs.google.com/spreadsheets/d/${currentSheetId}/edit`;
-            const topLink = document.getElementById("openSheetDirectLink");
-            const modalLink = document.getElementById("modalSheetLink");
-            if (topLink) topLink.href = sheetUrl;
-            if (modalLink) modalLink.href = sheetUrl;
-        }
-
         function setSheetSyncStatus(statusType, message) {
             const statusEl = document.getElementById("sheetSyncStatusText");
             if (!statusEl) return;
@@ -986,25 +662,17 @@
             `;
         }
 
-        // ★ 時間標準化與排序工具（解決 "9:00" 排在 "11:30" 後面的問題，確保嚴格從早到晚）
         function normalizeTimeStr(timeStr) {
             if (!timeStr) return "09:00";
             const cleaned = String(timeStr).trim();
             const match = cleaned.match(/^(\d{1,2}):(\d{2})/);
-            if (match) {
-                const hh = match[1].padStart(2, "0");
-                const mm = match[2];
-                return `${hh}:${mm}`;
-            }
-            return cleaned;
+            return match ? `${match[1].padStart(2, "0")}:${match[2]}` : cleaned;
         }
 
         function timeToMinutes(timeStr) {
             if (!timeStr) return 9999;
-            const cleaned = String(timeStr).trim();
-            const match = cleaned.match(/(\d{1,2}):(\d{2})/);
-            if (!match) return 9999;
-            return parseInt(match[1], 10) * 60 + parseInt(match[2], 10);
+            const match = String(timeStr).trim().match(/(\d{1,2}):(\d{2})/);
+            return match ? parseInt(match[1], 10) * 60 + parseInt(match[2], 10) : 9999;
         }
 
         function getDaySortNumber(dayLabel, fallbackIdx = 999) {
@@ -1012,16 +680,8 @@
             return match ? parseInt(match[1], 10) : fallbackIdx;
         }
 
-        // ★ 將 App 目前的所有行程維持 Day 1~5 順序、時間由早到晚排序並整理好
         function sortAppDataDaysAndItems() {
-            // 1. 保持 Day 1 - Day 5 順序不亂跳
-            appData.days.sort((a, b) => {
-                const numA = getDaySortNumber(a.label);
-                const numB = getDaySortNumber(b.label);
-                return numA - numB;
-            });
-
-            // 2. 將所有行程時間補零標準化，並依各天內時間由早到晚排列
+            appData.days.sort((a, b) => getDaySortNumber(a.label) - getDaySortNumber(b.label));
             const dayOrderMap = new Map();
             appData.days.forEach((d, index) => dayOrderMap.set(d.id, index));
 
@@ -1037,7 +697,6 @@
             });
         }
 
-        // ★ 將 App 目前的所有行程自動寫回 Google Sheets (透過 Google Apps Script Web App + 後端密碼鎖驗證)
         async function pushToGoogleSheet(manualClick = false) {
             if (!currentGasUrl || !currentGasUrl.startsWith("https://script.google.com/")) {
                 setSheetSyncStatus("error", "⚠️ 尚未啟用自動寫回（點右上角「設定」貼上橋接網址）");
@@ -1050,7 +709,6 @@
 
             if (currentGasUrl.endsWith("/dev")) {
                 setSheetSyncStatus("error", "⚠️ /dev 為測試網址無法寫入，請改用 /exec 正式網址");
-                showToast("⚠️ 請至 Apps Script 點「新增部署作業」取得 /exec 結尾的網址");
                 return;
             }
 
@@ -1064,7 +722,6 @@
             if (syncIcon) syncIcon.classList.add("fa-spin");
             setSheetSyncStatus("loading", "⚡ 正在驗證密碼並同步至 Google Sheets...");
 
-            // 寫回前先確保 Day 1~5 順序固定、且每天內部時間由早到晚排序
             sortAppDataDaysAndItems();
 
             const headers = [
@@ -1086,38 +743,19 @@
                 } else {
                     dayItems.forEach(item => {
                         rows.push([
-                            dayLabel,
-                            dayTheme,
-                            normalizeTimeStr(item.time || ""),
-                            item.category || "景點",
-                            item.title || "",
-                            item.area || "",
-                            item.commute || "",
-                            item.costAmount !== undefined && item.costAmount !== null ? item.costAmount : 0,
-                            item.costTip || "",
-                            item.notes || "",
-                            item.mapUrl || "",
-                            item.webUrl || ""
+                            dayLabel, dayTheme, normalizeTimeStr(item.time || ""),
+                            item.category || "景點", item.title || "", item.area || "",
+                            item.commute || "", item.costAmount ?? 0, item.costTip || "",
+                            item.notes || "", item.mapUrl || "", item.webUrl || ""
                         ]);
                     });
                 }
 
-                // 將該天的獨立記帳明細也一併寫入 Google Sheets 保存 (類別標記為「記帳」)
                 const dayExpenses = (appData.expenses || []).filter(exp => exp.dayId === dayObj.id);
                 dayExpenses.forEach(exp => {
                     rows.push([
-                        dayLabel,
-                        dayTheme,
-                        "",
-                        "記帳",
-                        exp.title || "",
-                        exp.category || "其他",
-                        "",
-                        exp.amount !== undefined && exp.amount !== null ? exp.amount : 0,
-                        "",
-                        "",
-                        "",
-                        ""
+                        dayLabel, dayTheme, "", "記帳", exp.title || "",
+                        exp.category || "其他", "", exp.amount ?? 0, "", "", "", ""
                     ]);
                 });
             });
@@ -1131,7 +769,6 @@
             });
 
             try {
-                // 優先使用標準模式讀取 Apps Script 回傳的密碼驗證結果
                 const res = await fetch(currentGasUrl, {
                     method: "POST",
                     redirect: "follow",
@@ -1147,7 +784,6 @@
                     setSheetSyncStatus("error", "❌ 編輯密碼錯誤！Google Sheets 已拒絕寫入");
                     showToast("❌ 編輯密碼錯誤！請重新輸入正確密碼");
                     openPinLockModal();
-                    // 自動從試算表拉回正確資料，還原未授權的修改
                     fetchFromGoogleSheet(false);
                     return;
                 }
@@ -1156,7 +792,6 @@
                 setSheetSyncStatus("success", `⚡ 已驗證密碼並同步至 Google Sheets (${nowStr})`);
                 showToast("⚡ 已儲存並同步至 Google Sheets！");
             } catch (err) {
-                // 若瀏覽器因跨網域重新導向限制無法讀取回應，降級以 no-cors 送出（後端仍會檢查 pin）
                 try {
                     await fetch(currentGasUrl, {
                         method: "POST",
@@ -1177,7 +812,6 @@
 
         function copyGasScriptCode() {
             const gasCode = [
-                '// ★ 請在下方雙引號內設定你專屬的「編輯通關密碼」（此密碼只存在 Google 後端，不會在 GitHub 公開）',
                 'const SECRET_PIN = "2026";',
                 '',
                 'function doGet(e) {',
@@ -1189,7 +823,6 @@
                 '',
                 'function doPost(e) {',
                 '  var data = JSON.parse(e.postData.contents);',
-                '  // 驗證編輯密碼是否正確，密碼不符直接拒絕寫入試算表',
                 '  if (String(data.pin || "") !== SECRET_PIN) {',
                 '    return ContentService.createTextOutput(JSON.stringify({status: "unauthorized", message: "密碼錯誤"})).setMimeType(ContentService.MimeType.JSON);',
                 '  }',
@@ -1209,18 +842,14 @@
             tempInput.select();
             document.execCommand("copy");
             document.body.removeChild(tempInput);
-            showToast("✅ 已複製含密碼鎖的橋接程式碼！請去 Apps Script 貼上並更新部署");
+            showToast("✅ 已複製含密碼鎖的橋接程式碼！");
         }
 
         function saveGasWebhookUrl() {
             const inputEl = document.getElementById("gasWebhookUrlInput");
             const rawUrl = inputEl ? inputEl.value.trim() : "";
-            if (!rawUrl || !rawUrl.startsWith("https://script.google.com/")) {
-                showToast("請貼上正確的 https://script.google.com/... 網頁應用程式網址");
-                return;
-            }
-            if (rawUrl.endsWith("/dev")) {
-                showToast("⚠️ 這是 /dev 測試網址，請點「新增部署作業」取得 /exec 正式網址！");
+            if (!rawUrl || !rawUrl.startsWith("https://script.google.com/") || rawUrl.endsWith("/dev")) {
+                showToast("⚠️ 請貼上正式部署產生的 .../exec 網址！");
                 return;
             }
             currentGasUrl = rawUrl;
@@ -1229,7 +858,6 @@
             requireEditPin(() => pushToGoogleSheet(true));
         }
 
-        // 純文字 CSV 解析器
         function parseCSVText(csvText) {
             const rows = [];
             let currentRow = [];
@@ -1241,47 +869,30 @@
                 const nextChar = csvText[i + 1];
 
                 if (inQuotes) {
-                    if (char === '"' && nextChar === '"') {
-                        currentVal += '"';
-                        i++;
-                    } else if (char === '"') {
-                        inQuotes = false;
-                    } else {
-                        currentVal += char;
-                    }
+                    if (char === '"' && nextChar === '"') { currentVal += '"'; i++; }
+                    else if (char === '"') { inQuotes = false; }
+                    else { currentVal += char; }
                 } else {
-                    if (char === '"') {
-                        inQuotes = true;
-                    } else if (char === ',') {
-                        currentRow.push(currentVal.trim());
-                        currentVal = "";
-                    } else if (char === '\n' || (char === '\r' && nextChar === '\n')) {
+                    if (char === '"') { inQuotes = true; }
+                    else if (char === ',') { currentRow.push(currentVal.trim()); currentVal = ""; }
+                    else if (char === '\n' || (char === '\r' && nextChar === '\n')) {
                         if (char === '\r') i++;
                         currentRow.push(currentVal.trim());
-                        if (currentRow.some(cell => cell !== "")) {
-                            rows.push(currentRow);
-                        }
+                        if (currentRow.some(cell => cell !== "")) rows.push(currentRow);
                         currentRow = [];
                         currentVal = "";
-                    } else {
-                        currentVal += char;
-                    }
+                    } else { currentVal += char; }
                 }
             }
             if (currentVal !== "" || currentRow.length > 0) {
                 currentRow.push(currentVal.trim());
-                if (currentRow.some(cell => cell !== "")) {
-                    rows.push(currentRow);
-                }
+                if (currentRow.some(cell => cell !== "")) rows.push(currentRow);
             }
             return rows;
         }
 
-        // 從 Google Sheets 讀取最新資料
         async function fetchFromGoogleSheet(showManualToast = false) {
             if (!currentSheetId) return;
-            updateSheetLinksUI();
-
             const syncIcon = document.getElementById("syncBtnIcon");
             if (syncIcon) syncIcon.classList.add("fa-spin");
             setSheetSyncStatus("loading", "正在從 Google Sheets 讀取...");
@@ -1294,9 +905,6 @@
 
                 if (!res.ok || text.trim().startsWith("<") || text.includes("<!DOCTYPE html>")) {
                     setSheetSyncStatus("error", "請將試算表共用權限設為「知道連結的任何人可檢視」");
-                    if (showManualToast) {
-                        showToast("⚠️ 無法讀取：請開啟試算表的「知道連結的任何人可檢視」權限");
-                    }
                     return;
                 }
 
@@ -1304,7 +912,6 @@
                 const parsedData = convertCSVRowsToAppData(rows);
 
                 if (parsedData && (parsedData.items.length > 0 || parsedData.expenses.length > 0)) {
-                    // 記住使用者目前正在瀏覽的是第幾天（例如 Day 2），避免背景同步完跳回 Day 1
                     const prevDayObj = appData.days.find(d => d.id === currentDayId);
                     const prevDayNum = prevDayObj ? getDaySortNumber(prevDayObj.label, 1) : 1;
 
@@ -1321,22 +928,15 @@
                     }
                     saveData(null, false);
                     renderAll();
-                    // 若手動按「同步試算表」且已解鎖密碼，讀取完同時把排好序的結果寫回 Google Sheets
-                    if (showManualToast && currentEditPin) {
-                        pushToGoogleSheet(false);
-                    }
+                    if (showManualToast && currentEditPin) pushToGoogleSheet(false);
                     const nowStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                     setSheetSyncStatus("success", `已與 Google Sheets 同步並依時間排序 (${nowStr})`);
                     if (showManualToast) showToast("✅ 已載入最新行程與記帳並自動排序！");
                 } else {
-                    setSheetSyncStatus("success", "試算表目前為空（顯示內建預設行程）");
-                    if (showManualToast) showToast("💡 試算表目前是空的，請先在設定視窗綁定 Apps Script 網址同步");
+                    setSheetSyncStatus("success", "試算表目前為空");
                 }
             } catch (err) {
                 setSheetSyncStatus("error", "離線模式（顯示本地快取行程）");
-                if (showManualToast) {
-                    showToast("⚠️ 無法連線至試算表，請確認試算表已開啟公開檢視權限");
-                }
             } finally {
                 if (syncIcon) syncIcon.classList.remove("fa-spin");
             }
@@ -1344,7 +944,6 @@
 
         function convertCSVRowsToAppData(rows) {
             if (!rows || rows.length === 0) return null;
-
             const daysMap = new Map();
             const items = [];
             const expenses = [];
@@ -1356,9 +955,7 @@
                 const rawCat = (cols[3] || "景點").trim();
                 const rawTitle = (cols[4] || "").trim();
 
-                if (idx === 0 && (rawDay.toLowerCase() === "day" || rawDay.includes("天數") || rawTitle.includes("名稱"))) {
-                    return;
-                }
+                if (idx === 0 && (rawDay.toLowerCase() === "day" || rawDay.includes("天數") || rawTitle.includes("名稱"))) return;
                 if (!rawDay && !rawTitle) return;
 
                 const dayLabel = rawDay || "Day 1";
@@ -1373,12 +970,7 @@
                         datePart = splitParts[0].trim() || dayLabel;
                         themePart = splitParts.slice(1).join("・").trim() || themePart;
                     }
-                    daysMap.set(dayId, {
-                        id: dayId,
-                        label: dayLabel,
-                        date: datePart,
-                        theme: themePart
-                    });
+                    daysMap.set(dayId, { id: dayId, label: dayLabel, date: datePart, theme: themePart });
                 }
 
                 if (rawTitle) {
@@ -1391,7 +983,6 @@
                     const rawMapUrl = (cols[10] || "").trim();
                     const rawWebUrl = (cols[11] || "").trim();
 
-                    // 若該列類別為「記帳」，歸入獨立記帳本陣列
                     if (rawCat === "記帳") {
                         expenses.push({
                             id: `sheet-exp-${idx}-${Date.now()}`,
@@ -1420,8 +1011,7 @@
             });
 
             const days = Array.from(daysMap.values()).sort((a, b) => getDaySortNumber(a.label) - getDaySortNumber(b.label));
-            if (days.length === 0) return null;
-            return { days, items, expenses };
+            return days.length === 0 ? null : { days, items, expenses };
         }
 
         function renderAll() {
@@ -1447,9 +1037,7 @@
                 return `
                     <button onclick="setCategoryFilter('${cat}')"
                         class="px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5 shrink-0 transition ${
-                            active
-                                ? 'bg-indigo-500 text-white shadow-xs'
-                                : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                            active ? 'bg-indigo-500 text-white shadow-xs' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
                         }">
                         <i class="fa-solid ${cfg.icon} text-[11px]"></i>
                         <span>${cat}</span>
@@ -1501,25 +1089,19 @@
             document.getElementById("currentDayBadge").textContent = currentDay.date || currentDay.label;
             document.getElementById("currentDayTheme").textContent = currentDay.theme || "未設定主題";
 
-            // 計算當日已消費金額 & 總共消費金額 (由獨立記帳本計算)
             const expensesList = Array.isArray(appData.expenses) ? appData.expenses : [];
             const dayExpenseSum = expensesList
                 .filter(exp => exp.dayId === currentDayId)
-                .reduce((sum, exp) => sum + (Number(exp.amount) || 0), 0);
-            const allExpenseSum = expensesList
                 .reduce((sum, exp) => sum + (Number(exp.amount) || 0), 0);
 
             const dayLabelEl = document.getElementById("currentDayExpenseLabel");
             if (dayLabelEl) dayLabelEl.textContent = currentDay.label || "本日";
             document.getElementById("currentDayTotalCost").textContent = `¥${dayExpenseSum.toLocaleString()}`;
-            const allCostEl = document.getElementById("allDaysTotalCost");
-            if (allCostEl) allCostEl.textContent = `¥${allExpenseSum.toLocaleString()}`;
 
             const allDayItems = appData.items.filter(item => item.dayId === currentDayId);
-            let dayItems = [...allDayItems];
-            if (currentCategoryFilter !== "全部") {
-                dayItems = dayItems.filter(item => item.category === currentCategoryFilter);
-            }
+            let dayItems = currentCategoryFilter === "全部"
+                ? [...allDayItems]
+                : allDayItems.filter(item => item.category === currentCategoryFilter);
             dayItems.sort((a, b) => timeToMinutes(a.time) - timeToMinutes(b.time));
 
             document.getElementById("currentDayStats").textContent =
@@ -1534,7 +1116,7 @@
                             <i class="fa-regular fa-compass"></i>
                         </div>
                         <p class="text-sm font-bold text-slate-700">這天還沒有符合的行程</p>
-                        <p class="text-xs text-slate-400 mt-1">點擊下方「＋新增本天行程」或在 Google Sheets 新增</p>
+                        <p class="text-xs text-slate-400 mt-1">點擊下方「＋新增本天行程」或右上角「同步試算表」</p>
                     </div>
                 `;
                 return;
@@ -1625,7 +1207,6 @@
             const titleEl = document.getElementById("itemModalTitle");
             document.getElementById("itemForm").reset();
 
-            // 動態填入「所屬天數」下拉選單，並預設選中目前所在的天數頁籤
             const daySelect = document.getElementById("itemDayId");
             if (daySelect) {
                 daySelect.innerHTML = appData.days.map(d =>
@@ -1652,8 +1233,7 @@
                 document.getElementById("itemNotes").value = item.notes || "";
             } else {
                 const curDayObj = appData.days.find(d => d.id === currentDayId);
-                const dayName = curDayObj ? curDayObj.label : "本天";
-                titleEl.textContent = `新增 ${dayName} 行程項目`;
+                titleEl.textContent = `新增 ${curDayObj ? curDayObj.label : "本天"} 行程項目`;
                 document.getElementById("editItemId").value = "";
                 if (daySelect) daySelect.value = currentDayId;
                 document.getElementById("itemTime").value = "10:00";
@@ -1689,17 +1269,11 @@
 
             if (editId) {
                 const idx = appData.items.findIndex(i => i.id === editId);
-                if (idx > -1) {
-                    appData.items[idx] = { ...appData.items[idx], ...payload };
-                }
+                if (idx > -1) appData.items[idx] = { ...appData.items[idx], ...payload };
             } else {
-                appData.items.push({
-                    id: "item-" + Date.now(),
-                    ...payload
-                });
+                appData.items.push({ id: "item-" + Date.now(), ...payload });
             }
 
-            // 儲存後自動維持停留在剛剛新增/修改的那一天頁籤
             currentDayId = selectedDayId;
             sortAppDataDaysAndItems();
             saveData("已儲存行程！");
@@ -1714,9 +1288,7 @@
             if (!target) return;
             pendingDeleteItemId = itemId;
             const titleEl = document.getElementById("deleteConfirmItemTitle");
-            if (titleEl) {
-                titleEl.textContent = `${target.time ? target.time + ' ' : ''}${target.title || '此行程項目'}`;
-            }
+            if (titleEl) titleEl.textContent = `${target.time ? target.time + ' ' : ''}${target.title || '此行程項目'}`;
             document.getElementById("deleteConfirmModal").classList.remove("hidden");
         }
 
@@ -1733,9 +1305,6 @@
             renderDayBannerAndList();
         }
 
-        // =========================================================================
-        // ★ 獨立分天記帳本功能
-        // =========================================================================
         function openExpenseModal() {
             currentExpenseDayId = currentDayId;
             resetExpenseForm();
@@ -1764,7 +1333,6 @@
         function renderExpenseModalContent() {
             if (!Array.isArray(appData.expenses)) appData.expenses = [];
 
-            // 1. 渲染天數切換按鈕
             const tabsEl = document.getElementById("expenseDayTabs");
             if (tabsEl) {
                 tabsEl.innerHTML = appData.days.map(day => {
@@ -1786,7 +1354,6 @@
                 }).join("");
             }
 
-            // 2. 更新當日與總計金額
             const curDayObj = appData.days.find(d => d.id === currentExpenseDayId) || appData.days[0];
             const dayExpenses = appData.expenses.filter(e => e.dayId === currentExpenseDayId);
             const dayTotal = dayExpenses.reduce((s, e) => s + (Number(e.amount) || 0), 0);
@@ -1796,7 +1363,6 @@
             document.getElementById("expenseModalDayTotal").textContent = `¥${dayTotal.toLocaleString()}`;
             document.getElementById("expenseModalAllTotal").textContent = `¥${allTotal.toLocaleString()}`;
 
-            // 3. 渲染該日花費明細列表
             const listEl = document.getElementById("expenseListContainer");
             if (!listEl) return;
 
@@ -1840,34 +1406,18 @@
             e.preventDefault();
             requireEditPin(() => {
                 if (!Array.isArray(appData.expenses)) appData.expenses = [];
-
                 const editId = document.getElementById("editExpenseId").value;
                 const title = document.getElementById("expenseTitleInput").value.trim();
                 const category = document.getElementById("expenseCategoryInput").value;
                 const amount = Number(document.getElementById("expenseAmountInput").value) || 0;
-
                 if (!title || amount <= 0) return;
 
                 if (editId) {
                     const idx = appData.expenses.findIndex(x => x.id === editId);
-                    if (idx > -1) {
-                        appData.expenses[idx] = {
-                            ...appData.expenses[idx],
-                            dayId: currentExpenseDayId,
-                            title,
-                            category,
-                            amount
-                        };
-                    }
+                    if (idx > -1) appData.expenses[idx] = { ...appData.expenses[idx], dayId: currentExpenseDayId, title, category, amount };
                     saveData("已修改花費明細！");
                 } else {
-                    appData.expenses.push({
-                        id: "exp-" + Date.now(),
-                        dayId: currentExpenseDayId,
-                        title,
-                        category,
-                        amount
-                    });
+                    appData.expenses.push({ id: "exp-" + Date.now(), dayId: currentExpenseDayId, title, category, amount });
                     saveData("已新增一筆花費！");
                 }
 
@@ -1956,7 +1506,6 @@
             const gasInput = document.getElementById("gasWebhookUrlInput");
             if (gasInput) gasInput.value = currentGasUrl || "";
             document.getElementById("importJsonTextarea").value = "";
-            updateSheetLinksUI();
             document.getElementById("syncModal").classList.remove("hidden");
         }
 
@@ -1965,18 +1514,15 @@
         }
 
         function saveSheetIdAndSync() {
-            const rawInput = document.getElementById("sheetIdInput").value;
-            currentSheetId = extractSheetId(rawInput);
+            currentSheetId = extractSheetId(document.getElementById("sheetIdInput").value);
             localStorage.setItem(SHEET_ID_STORAGE_KEY, currentSheetId);
-            updateSheetLinksUI();
             closeSyncModal();
             fetchFromGoogleSheet(true);
         }
 
         function copyCurrentJson() {
-            const jsonStr = JSON.stringify(appData, null, 2);
             const tempInput = document.createElement("textarea");
-            tempInput.value = jsonStr;
+            tempInput.value = JSON.stringify(appData, null, 2);
             document.body.appendChild(tempInput);
             tempInput.select();
             document.execCommand("copy");
@@ -1986,14 +1532,11 @@
 
         function importJsonData() {
             const raw = document.getElementById("importJsonTextarea").value.trim();
-            if (!raw) {
-                showToast("請先貼上行程代碼！");
-                return;
-            }
+            if (!raw) return showToast("請先貼上行程代碼！");
             requireEditPin(() => {
                 try {
                     const parsed = JSON.parse(raw);
-                    if (!parsed.days || !parsed.items) throw new Error("格式不正確");
+                    if (!parsed.days || !parsed.items) throw new Error();
                     appData = parsed;
                     currentDayId = appData.days[0]?.id || "day1";
                     saveData("成功匯入行程資料！");
@@ -2005,29 +1548,13 @@
             });
         }
 
-        function resetToDefaultData() {
-            requireEditPin(() => {
-                appData = JSON.parse(JSON.stringify(DEFAULT_TRIP_DATA));
-                currentDayId = appData.days[0].id;
-                saveData("已還原為預設範例行程");
-                closeSyncModal();
-                renderAll();
-            });
-        }
-
         function escapeHtml(str) {
             if (!str) return "";
-            return String(str)
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;")
-                .replace(/'/g, "&#039;");
+            return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
         }
 
         function escapeAttr(str) {
-            if (!str) return "";
-            return String(str).replace(/"/g, "&quot;");
+            return str ? String(str).replace(/"/g, "&quot;") : "";
         }
 
         window.onload = function () {
