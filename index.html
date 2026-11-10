@@ -56,7 +56,7 @@
                         <div class="truncate">
                             <div class="flex items-center gap-1.5">
                                 <h1 id="tripTitleDisplay" class="text-base font-bold tracking-tight truncate">2026 京阪神奈秋日自由行</h1>
-                                <button onclick="openTripTitleModal()" class="text-slate-400 hover:text-white text-xs p-1" title="修改旅程標題">
+                                <button onclick="requireEditPin(() => openTripTitleModal())" class="text-slate-400 hover:text-white text-xs p-1" title="修改旅程標題">
                                     <i class="fa-solid fa-pen"></i>
                                 </button>
                             </div>
@@ -66,6 +66,9 @@
 
                     <!-- 右上角工具按鈕 -->
                     <div class="flex items-center gap-1.5 shrink-0">
+                        <button onclick="openPinLockModal()" id="pinLockStatusBtn" class="px-2 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-400 text-xs font-bold flex items-center gap-1 border border-slate-700 transition active:scale-95" title="編輯密碼鎖設定">
+                            <i id="pinLockIcon" class="fa-solid fa-lock"></i>
+                        </button>
                         <button onclick="fetchFromGoogleSheet(true)" id="syncBtn" class="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1 shadow-xs transition active:scale-95" title="從 Google Sheets 重新整理最新行程">
                             <i id="syncBtnIcon" class="fa-solid fa-rotate"></i>
                             <span>同步試算表</span>
@@ -111,7 +114,7 @@
                         </div>
                         <h2 id="currentDayTheme" class="text-sm font-bold text-slate-800 mt-1.5 leading-snug break-words">抵達大阪・市區逛街</h2>
                     </div>
-                    <button onclick="openDayInfoModal()" class="px-2.5 py-1.5 text-xs font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-xl transition whitespace-nowrap shrink-0 flex items-center gap-1">
+                    <button onclick="requireEditPin(() => openDayInfoModal())" class="px-2.5 py-1.5 text-xs font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-xl transition whitespace-nowrap shrink-0 flex items-center gap-1">
                         <i class="fa-solid fa-calendar-day"></i>
                         <span>改本日主題</span>
                     </button>
@@ -144,11 +147,41 @@
                     <i class="fa-solid fa-wallet text-amber-200"></i>
                     <span>💰 記帳本</span>
                 </button>
-                <button onclick="openItemModal()" class="flex-1 py-3 px-5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-bold shadow-lg shadow-indigo-500/30 flex items-center justify-center gap-2 transition active:scale-95">
+                <button onclick="requireEditPin(() => openItemModal())" class="flex-1 py-3 px-5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-bold shadow-lg shadow-indigo-500/30 flex items-center justify-center gap-2 transition active:scale-95">
                     <i class="fa-solid fa-plus"></i>
                     <span>新增本天行程</span>
                 </button>
             </div>
+        </div>
+    </div>
+
+    <!-- 彈出視窗 7：編輯密碼鎖 (PIN 碼驗證) Modal -->
+    <div id="pinLockModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs hidden flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-xs rounded-3xl shadow-2xl overflow-hidden card-animate">
+            <div class="px-5 py-4 bg-slate-900 text-white flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-shield-halved text-amber-400"></i>
+                    <h3 class="text-base font-bold">編輯權限密碼鎖</h3>
+                </div>
+                <button onclick="closePinLockModal()" class="w-8 h-8 rounded-full bg-slate-800 text-slate-300 flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <form onsubmit="savePinLockForm(event)" class="p-5 space-y-3.5 text-xs">
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">通關密碼 (PIN)：</label>
+                    <input type="password" id="editPinInput" required placeholder="請輸入編輯密碼" class="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm font-mono tracking-widest text-center focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div class="flex items-center justify-between gap-2 pt-1">
+                    <button type="button" onclick="clearSavedPin()" class="px-3 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-semibold">
+                        登出上鎖
+                    </button>
+                    <div class="flex items-center gap-1.5">
+                        <button type="button" onclick="closePinLockModal()" class="px-3.5 py-2.5 rounded-xl border border-slate-300 text-slate-600 font-semibold">取消</button>
+                        <button type="submit" class="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold shadow-xs">解鎖並記住</button>
+                    </div>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -437,20 +470,21 @@
                     </div>
                 </div>
 
-                <!-- 雙向自動寫回設定區塊 (Google Apps Script) -->
+                <!-- 雙向自動寫回設定區塊 (Google Apps Script 含密碼鎖) -->
                 <div class="p-3.5 rounded-2xl bg-sky-50 border border-sky-200 text-sky-900 space-y-2.5">
                     <div class="flex items-center justify-between">
                         <p class="font-bold text-sm flex items-center gap-1.5">
-                            <i class="fa-solid fa-bolt text-amber-500"></i>
-                            <span>啟用「App 修改自動寫回試算表」</span>
+                            <i class="fa-solid fa-shield-halved text-amber-500"></i>
+                            <span>自動寫回 ＆ 後端密碼鎖設定</span>
                         </p>
                         <button type="button" onclick="copyGasScriptCode()" class="px-2.5 py-1 rounded-lg bg-sky-600 hover:bg-sky-500 text-white font-bold text-[11px]">
-                            📋 複製橋接程式碼
+                            📋 複製含密碼鎖程式碼
                         </button>
                     </div>
                     <p class="text-[11px] text-sky-800 leading-normal">
-                        1. 點上方複製程式碼，至試算表<strong>「擴充功能 ➔ Apps Script」</strong>貼上並點選<strong>「部署 ➔ 新增部署作業」</strong>（類型：網頁應用程式、誰可以存取：所有人）。<br>
-                        2. 將新產生的正式 <code>https://script.google.com/macros/s/.../exec</code> 網址貼在下方：
+                        1. 點上方複製新版程式碼，至試算表<strong>「擴充功能 ➔ Apps Script」</strong>覆蓋貼上。<br>
+                        2. 修改程式碼第一行的 <code>SECRET_PIN = "2026"</code> 為你專屬的密碼（此密碼只存在 Google 後端，不會在 GitHub 曝光）。<br>
+                        3. 點選<strong>「部署 ➔ 管理部署作業 ➔ 編輯(鉛筆) ➔ 版本選『新版本』➔ 部署」</strong>。
                     </p>
                     <div>
                         <input type="url" id="gasWebhookUrlInput" placeholder="貼上正式部署產生的 .../exec 網址" class="w-full rounded-xl border border-sky-300 px-3 py-2 bg-white text-slate-800 font-mono text-[11px] focus:outline-none focus:ring-2 focus:ring-sky-500">
@@ -521,6 +555,7 @@
         const DEFAULT_GAS_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbzdKOJQltbB1Wlq0RCSJbjdSsGuQgwl8Bsjkts7QAP0n8mPSScuzAVzXs_gTxoffNIy/exec";
         const SHEET_ID_STORAGE_KEY = "TRAVEL_APP_GOOGLE_SHEET_ID_V1";
         const GAS_URL_STORAGE_KEY = "TRAVEL_APP_GAS_URL_V2";
+        const EDIT_PIN_STORAGE_KEY = "TRAVEL_APP_EDIT_PIN_V1";
 
         // =========================================================================
         // ★ 預設離線備份行程資料庫 (5天4夜完整行程規劃表)
@@ -816,11 +851,71 @@
             localStorage.removeItem(GAS_URL_STORAGE_KEY);
         }
         let currentGasUrl = savedGasUrl || DEFAULT_GAS_WEBHOOK_URL;
+        let currentEditPin = localStorage.getItem(EDIT_PIN_STORAGE_KEY) || "";
+        let pendingPinAction = null;
         let appData = loadData();
         if (!Array.isArray(appData.expenses)) appData.expenses = [];
         let currentDayId = appData.days[0]?.id || "day1";
         let currentExpenseDayId = currentDayId;
         let currentCategoryFilter = "全部";
+
+        // =========================================================================
+        // ★ 方案一：編輯密碼鎖 (PIN 碼) 控制邏輯
+        // =========================================================================
+        function updatePinLockUI() {
+            const btn = document.getElementById("pinLockStatusBtn");
+            const icon = document.getElementById("pinLockIcon");
+            if (!btn || !icon) return;
+            if (currentEditPin) {
+                icon.className = "fa-solid fa-lock-open text-emerald-400";
+                btn.title = "已輸入編輯密碼（點擊可更換或上鎖）";
+            } else {
+                icon.className = "fa-solid fa-lock text-amber-400";
+                btn.title = "唯讀保護中（點擊輸入編輯密碼）";
+            }
+        }
+
+        function requireEditPin(actionCallback) {
+            if (currentEditPin && currentEditPin.trim() !== "") {
+                actionCallback();
+            } else {
+                pendingPinAction = actionCallback;
+                openPinLockModal();
+            }
+        }
+
+        function openPinLockModal() {
+            const input = document.getElementById("editPinInput");
+            if (input) input.value = currentEditPin || "";
+            document.getElementById("pinLockModal").classList.remove("hidden");
+            setTimeout(() => { if (input) input.focus(); }, 80);
+        }
+
+        function closePinLockModal() {
+            pendingPinAction = null;
+            document.getElementById("pinLockModal").classList.add("hidden");
+        }
+
+        function savePinLockForm(e) {
+            e.preventDefault();
+            const val = document.getElementById("editPinInput").value.trim();
+            if (!val) return;
+            currentEditPin = val;
+            localStorage.setItem(EDIT_PIN_STORAGE_KEY, currentEditPin);
+            updatePinLockUI();
+            const cb = pendingPinAction;
+            closePinLockModal();
+            showToast("🔓 已設定編輯密碼！");
+            if (typeof cb === "function") cb();
+        }
+
+        function clearSavedPin() {
+            currentEditPin = "";
+            localStorage.removeItem(EDIT_PIN_STORAGE_KEY);
+            updatePinLockUI();
+            closePinLockModal();
+            showToast("🔒 已清除本機密碼，恢復唯讀保護狀態");
+        }
 
         function loadData() {
             try {
@@ -942,7 +1037,7 @@
             });
         }
 
-        // ★ 將 App 目前的所有行程自動寫回 Google Sheets (透過 Google Apps Script Web App)
+        // ★ 將 App 目前的所有行程自動寫回 Google Sheets (透過 Google Apps Script Web App + 後端密碼鎖驗證)
         async function pushToGoogleSheet(manualClick = false) {
             if (!currentGasUrl || !currentGasUrl.startsWith("https://script.google.com/")) {
                 setSheetSyncStatus("error", "⚠️ 尚未啟用自動寫回（點右上角「設定」貼上橋接網址）");
@@ -959,9 +1054,15 @@
                 return;
             }
 
+            if (!currentEditPin) {
+                setSheetSyncStatus("error", "🔒 尚未輸入編輯密碼，變更僅暫存於本機");
+                openPinLockModal();
+                return;
+            }
+
             const syncIcon = document.getElementById("syncBtnIcon");
             if (syncIcon) syncIcon.classList.add("fa-spin");
-            setSheetSyncStatus("loading", "⚡ 正在自動排序並同步至 Google Sheets...");
+            setSheetSyncStatus("loading", "⚡ 正在驗證密碼並同步至 Google Sheets...");
 
             // 寫回前先確保 Day 1~5 順序固定、且每天內部時間由早到晚排序
             sortAppDataDaysAndItems();
@@ -1021,26 +1122,54 @@
                 });
             });
 
+            const payloadStr = JSON.stringify({
+                pin: currentEditPin,
+                sheetId: currentSheetId,
+                tripTitle: appData.tripTitle,
+                tripSubtitle: appData.tripSubtitle,
+                rows: rows
+            });
+
             try {
-                await fetch(currentGasUrl, {
+                // 優先使用標準模式讀取 Apps Script 回傳的密碼驗證結果
+                const res = await fetch(currentGasUrl, {
                     method: "POST",
-                    mode: "no-cors",
                     redirect: "follow",
                     headers: { "Content-Type": "text/plain;charset=utf-8" },
-                    body: JSON.stringify({
-                        sheetId: currentSheetId,
-                        tripTitle: appData.tripTitle,
-                        tripSubtitle: appData.tripSubtitle,
-                        rows: rows
-                    })
+                    body: payloadStr
                 });
 
+                const result = await res.json();
+                if (result && result.status === "unauthorized") {
+                    currentEditPin = "";
+                    localStorage.removeItem(EDIT_PIN_STORAGE_KEY);
+                    updatePinLockUI();
+                    setSheetSyncStatus("error", "❌ 編輯密碼錯誤！Google Sheets 已拒絕寫入");
+                    showToast("❌ 編輯密碼錯誤！請重新輸入正確密碼");
+                    openPinLockModal();
+                    // 自動從試算表拉回正確資料，還原未授權的修改
+                    fetchFromGoogleSheet(false);
+                    return;
+                }
+
                 const nowStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                setSheetSyncStatus("success", `⚡ 已發送同步至 Google Sheets (${nowStr})`);
+                setSheetSyncStatus("success", `⚡ 已驗證密碼並同步至 Google Sheets (${nowStr})`);
                 showToast("⚡ 已儲存並同步至 Google Sheets！");
             } catch (err) {
-                setSheetSyncStatus("error", "⚠️ 自動同步失敗，請檢查 Apps Script 網址");
-                showToast("⚠️ 本地已儲存，但雲端同步失敗");
+                // 若瀏覽器因跨網域重新導向限制無法讀取回應，降級以 no-cors 送出（後端仍會檢查 pin）
+                try {
+                    await fetch(currentGasUrl, {
+                        method: "POST",
+                        mode: "no-cors",
+                        headers: { "Content-Type": "text/plain;charset=utf-8" },
+                        body: payloadStr
+                    });
+                    const nowStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    setSheetSyncStatus("success", `⚡ 已發送同步至 Google Sheets (${nowStr})`);
+                } catch (e2) {
+                    setSheetSyncStatus("error", "⚠️ 自動同步失敗，請檢查 Apps Script 網址");
+                    showToast("⚠️ 本地已儲存，但雲端同步失敗");
+                }
             } finally {
                 if (syncIcon) syncIcon.classList.remove("fa-spin");
             }
@@ -1048,14 +1177,22 @@
 
         function copyGasScriptCode() {
             const gasCode = [
+                '// ★ 請在下方雙引號內設定你專屬的「編輯通關密碼」（此密碼只存在 Google 後端，不會在 GitHub 公開）',
+                'const SECRET_PIN = "2026";',
+                '',
                 'function doGet(e) {',
                 '  var ss = SpreadsheetApp.openById("' + currentSheetId + '");',
                 '  var sheet = ss.getSheets()[0];',
                 '  var rows = sheet.getDataRange().getDisplayValues();',
                 '  return ContentService.createTextOutput(JSON.stringify({status: "ok", rows: rows})).setMimeType(ContentService.MimeType.JSON);',
                 '}',
+                '',
                 'function doPost(e) {',
                 '  var data = JSON.parse(e.postData.contents);',
+                '  // 驗證編輯密碼是否正確，密碼不符直接拒絕寫入試算表',
+                '  if (String(data.pin || "") !== SECRET_PIN) {',
+                '    return ContentService.createTextOutput(JSON.stringify({status: "unauthorized", message: "密碼錯誤"})).setMimeType(ContentService.MimeType.JSON);',
+                '  }',
                 '  var ss = SpreadsheetApp.openById(data.sheetId || "' + currentSheetId + '");',
                 '  var sheet = ss.getSheets()[0];',
                 '  sheet.clearContents();',
@@ -1072,7 +1209,7 @@
             tempInput.select();
             document.execCommand("copy");
             document.body.removeChild(tempInput);
-            showToast("✅ 已複製橋接程式碼！請去試算表的「擴充功能 ➔ Apps Script」貼上");
+            showToast("✅ 已複製含密碼鎖的橋接程式碼！請去 Apps Script 貼上並更新部署");
         }
 
         function saveGasWebhookUrl() {
@@ -1089,7 +1226,7 @@
             currentGasUrl = rawUrl;
             localStorage.setItem(GAS_URL_STORAGE_KEY, currentGasUrl);
             closeSyncModal();
-            pushToGoogleSheet(true);
+            requireEditPin(() => pushToGoogleSheet(true));
         }
 
         // 純文字 CSV 解析器
@@ -1184,8 +1321,8 @@
                     }
                     saveData(null, false);
                     renderAll();
-                    // 若手動按「同步試算表」，讀取完同時把排好序的結果寫回 Google Sheets，讓試算表本身也維持從早到晚整齊排列
-                    if (showManualToast) {
+                    // 若手動按「同步試算表」且已解鎖密碼，讀取完同時把排好序的結果寫回 Google Sheets
+                    if (showManualToast && currentEditPin) {
                         pushToGoogleSheet(false);
                     }
                     const nowStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -1288,6 +1425,7 @@
         }
 
         function renderAll() {
+            updatePinLockUI();
             renderHeaderInfo();
             renderCategoryFilterBar();
             renderDayTabs();
@@ -1438,10 +1576,10 @@
                                 </div>
 
                                 <div class="flex items-center gap-1 shrink-0">
-                                    <button onclick="openItemModal('${item.id}')" class="w-7 h-7 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 flex items-center justify-center transition" title="編輯">
+                                    <button onclick="requireEditPin(() => openItemModal('${item.id}'))" class="w-7 h-7 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 flex items-center justify-center transition" title="編輯">
                                         <i class="fa-solid fa-pen-to-square text-xs"></i>
                                     </button>
-                                    <button onclick="deleteItem('${item.id}')" class="w-7 h-7 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center transition" title="刪除">
+                                    <button onclick="requireEditPin(() => deleteItem('${item.id}'))" class="w-7 h-7 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center transition" title="刪除">
                                         <i class="fa-solid fa-trash-can text-xs"></i>
                                     </button>
                                 </div>
@@ -1686,10 +1824,10 @@
                         </div>
                         <div class="flex items-center gap-2 shrink-0">
                             <span class="text-sm font-extrabold font-mono text-emerald-700">¥${Number(exp.amount || 0).toLocaleString()}</span>
-                            <button type="button" onclick="editExpenseItem('${exp.id}')" class="w-7 h-7 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 flex items-center justify-center" title="修改此筆花費">
+                            <button type="button" onclick="requireEditPin(() => editExpenseItem('${exp.id}'))" class="w-7 h-7 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 flex items-center justify-center" title="修改此筆花費">
                                 <i class="fa-solid fa-pen text-xs"></i>
                             </button>
-                            <button type="button" onclick="deleteExpenseItem('${exp.id}')" class="w-7 h-7 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center" title="刪除此筆花費">
+                            <button type="button" onclick="requireEditPin(() => deleteExpenseItem('${exp.id}'))" class="w-7 h-7 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center" title="刪除此筆花費">
                                 <i class="fa-solid fa-trash-can text-xs"></i>
                             </button>
                         </div>
@@ -1700,41 +1838,43 @@
 
         function saveExpenseForm(e) {
             e.preventDefault();
-            if (!Array.isArray(appData.expenses)) appData.expenses = [];
+            requireEditPin(() => {
+                if (!Array.isArray(appData.expenses)) appData.expenses = [];
 
-            const editId = document.getElementById("editExpenseId").value;
-            const title = document.getElementById("expenseTitleInput").value.trim();
-            const category = document.getElementById("expenseCategoryInput").value;
-            const amount = Number(document.getElementById("expenseAmountInput").value) || 0;
+                const editId = document.getElementById("editExpenseId").value;
+                const title = document.getElementById("expenseTitleInput").value.trim();
+                const category = document.getElementById("expenseCategoryInput").value;
+                const amount = Number(document.getElementById("expenseAmountInput").value) || 0;
 
-            if (!title || amount <= 0) return;
+                if (!title || amount <= 0) return;
 
-            if (editId) {
-                const idx = appData.expenses.findIndex(x => x.id === editId);
-                if (idx > -1) {
-                    appData.expenses[idx] = {
-                        ...appData.expenses[idx],
+                if (editId) {
+                    const idx = appData.expenses.findIndex(x => x.id === editId);
+                    if (idx > -1) {
+                        appData.expenses[idx] = {
+                            ...appData.expenses[idx],
+                            dayId: currentExpenseDayId,
+                            title,
+                            category,
+                            amount
+                        };
+                    }
+                    saveData("已修改花費明細！");
+                } else {
+                    appData.expenses.push({
+                        id: "exp-" + Date.now(),
                         dayId: currentExpenseDayId,
                         title,
                         category,
                         amount
-                    };
+                    });
+                    saveData("已新增一筆花費！");
                 }
-                saveData("已修改花費明細！");
-            } else {
-                appData.expenses.push({
-                    id: "exp-" + Date.now(),
-                    dayId: currentExpenseDayId,
-                    title,
-                    category,
-                    amount
-                });
-                saveData("已新增一筆花費！");
-            }
 
-            resetExpenseForm();
-            renderExpenseModalContent();
-            renderDayBannerAndList();
+                resetExpenseForm();
+                renderExpenseModalContent();
+                renderDayBannerAndList();
+            });
         }
 
         function editExpenseItem(expId) {
@@ -1850,25 +1990,29 @@
                 showToast("請先貼上行程代碼！");
                 return;
             }
-            try {
-                const parsed = JSON.parse(raw);
-                if (!parsed.days || !parsed.items) throw new Error("格式不正確");
-                appData = parsed;
-                currentDayId = appData.days[0]?.id || "day1";
-                saveData("成功匯入行程資料！");
-                closeSyncModal();
-                renderAll();
-            } catch (e) {
-                showToast("代碼格式錯誤，請確認複製完整的 JSON");
-            }
+            requireEditPin(() => {
+                try {
+                    const parsed = JSON.parse(raw);
+                    if (!parsed.days || !parsed.items) throw new Error("格式不正確");
+                    appData = parsed;
+                    currentDayId = appData.days[0]?.id || "day1";
+                    saveData("成功匯入行程資料！");
+                    closeSyncModal();
+                    renderAll();
+                } catch (e) {
+                    showToast("代碼格式錯誤，請確認複製完整的 JSON");
+                }
+            });
         }
 
         function resetToDefaultData() {
-            appData = JSON.parse(JSON.stringify(DEFAULT_TRIP_DATA));
-            currentDayId = appData.days[0].id;
-            saveData("已還原為預設範例行程");
-            closeSyncModal();
-            renderAll();
+            requireEditPin(() => {
+                appData = JSON.parse(JSON.stringify(DEFAULT_TRIP_DATA));
+                currentDayId = appData.days[0].id;
+                saveData("已還原為預設範例行程");
+                closeSyncModal();
+                renderAll();
+            });
         }
 
         function escapeHtml(str) {
