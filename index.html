@@ -163,6 +163,13 @@
             <form id="itemForm" onsubmit="saveItemForm(event)" class="p-5 overflow-y-auto space-y-3.5 text-sm">
                 <input type="hidden" id="editItemId">
 
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">所屬天數 *</label>
+                    <select id="itemDayId" class="w-full rounded-xl border border-indigo-300 bg-indigo-50/60 text-indigo-950 font-bold px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <!-- JS 動態生成天數選項 -->
+                    </select>
+                </div>
+
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs font-semibold text-slate-600 mb-1">時間 *</label>
@@ -387,6 +394,28 @@
                         </button>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 彈出視窗 5：確認刪除行程提示視窗 -->
+    <div id="deleteConfirmModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs hidden flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-xs rounded-3xl shadow-2xl overflow-hidden card-animate p-5 text-center space-y-4">
+            <div class="w-12 h-12 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center mx-auto text-xl">
+                <i class="fa-solid fa-trash-can"></i>
+            </div>
+            <div class="space-y-1.5">
+                <h3 class="text-base font-bold text-slate-900">是否確認刪除該行程？</h3>
+                <p id="deleteConfirmItemTitle" class="text-xs font-semibold text-rose-600 bg-rose-50 px-3 py-1.5 rounded-xl break-words"></p>
+                <p class="text-[11px] text-slate-400">刪除後將自動同步更新至 Google Sheets</p>
+            </div>
+            <div class="flex items-center gap-2.5 pt-1">
+                <button type="button" onclick="closeDeleteConfirmModal()" class="flex-1 py-2.5 rounded-xl border border-slate-300 text-slate-600 font-semibold text-xs hover:bg-slate-100 transition">
+                    取消
+                </button>
+                <button type="button" onclick="confirmDeleteItem()" class="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-md shadow-rose-500/20 transition">
+                    確認刪除
+                </button>
             </div>
         </div>
     </div>
@@ -762,6 +791,57 @@
             `;
         }
 
+        // ★ 時間標準化與排序工具（解決 "9:00" 排在 "11:30" 後面的問題，確保嚴格從早到晚）
+        function normalizeTimeStr(timeStr) {
+            if (!timeStr) return "09:00";
+            const cleaned = String(timeStr).trim();
+            const match = cleaned.match(/^(\d{1,2}):(\d{2})/);
+            if (match) {
+                const hh = match[1].padStart(2, "0");
+                const mm = match[2];
+                return `${hh}:${mm}`;
+            }
+            return cleaned;
+        }
+
+        function timeToMinutes(timeStr) {
+            if (!timeStr) return 9999;
+            const cleaned = String(timeStr).trim();
+            const match = cleaned.match(/(\d{1,2}):(\d{2})/);
+            if (!match) return 9999;
+            return parseInt(match[1], 10) * 60 + parseInt(match[2], 10);
+        }
+
+        function getDaySortNumber(dayLabel, fallbackIdx = 999) {
+            const match = String(dayLabel || "").match(/(\d+)/);
+            return match ? parseInt(match[1], 10) : fallbackIdx;
+        }
+
+        // ★ 將 App 目前的所有行程維持 Day 1~5 順序、時間由早到晚排序並整理好
+        function sortAppDataDaysAndItems() {
+            // 1. 保持 Day 1 - Day 5 順序不亂跳
+            appData.days.sort((a, b) => {
+                const numA = getDaySortNumber(a.label);
+                const numB = getDaySortNumber(b.label);
+                return numA - numB;
+            });
+
+            // 2. 將所有行程時間補零標準化，並依各天內時間由早到晚排列
+            const dayOrderMap = new Map();
+            appData.days.forEach((d, index) => dayOrderMap.set(d.id, index));
+
+            appData.items.forEach(item => {
+                if (item.time) item.time = normalizeTimeStr(item.time);
+            });
+
+            appData.items.sort((a, b) => {
+                const dayIdxA = dayOrderMap.has(a.dayId) ? dayOrderMap.get(a.dayId) : 999;
+                const dayIdxB = dayOrderMap.has(b.dayId) ? dayOrderMap.get(b.dayId) : 999;
+                if (dayIdxA !== dayIdxB) return dayIdxA - dayIdxB;
+                return timeToMinutes(a.time) - timeToMinutes(b.time);
+            });
+        }
+
         // ★ 將 App 目前的所有行程自動寫回 Google Sheets (透過 Google Apps Script Web App)
         async function pushToGoogleSheet(manualClick = false) {
             if (!currentGasUrl || !currentGasUrl.startsWith("https://script.google.com/")) {
@@ -781,7 +861,10 @@
 
             const syncIcon = document.getElementById("syncBtnIcon");
             if (syncIcon) syncIcon.classList.add("fa-spin");
-            setSheetSyncStatus("loading", "⚡ 正在自動同步至 Google Sheets...");
+            setSheetSyncStatus("loading", "⚡ 正在自動排序並同步至 Google Sheets...");
+
+            // 寫回前先確保 Day 1~5 順序固定、且每天內部時間由早到晚排序
+            sortAppDataDaysAndItems();
 
             const headers = [
                 "Day", "日期與主題", "時間", "類別", "景點或餐廳名稱",
@@ -793,7 +876,7 @@
             appData.days.forEach(dayObj => {
                 const dayItems = appData.items
                     .filter(item => item.dayId === dayObj.id)
-                    .sort((a, b) => (a.time || "").localeCompare(b.time || ""));
+                    .sort((a, b) => timeToMinutes(a.time) - timeToMinutes(b.time));
                 const dayLabel = dayObj.label || "Day 1";
                 const dayTheme = `${dayObj.date || dayLabel}・${dayObj.theme || ""}`;
 
@@ -804,7 +887,7 @@
                         rows.push([
                             dayLabel,
                             dayTheme,
-                            item.time || "",
+                            normalizeTimeStr(item.time || ""),
                             item.category || "景點",
                             item.title || "",
                             item.area || "",
@@ -965,16 +1048,29 @@
                 const parsedData = convertCSVRowsToAppData(rows);
 
                 if (parsedData && parsedData.items.length > 0) {
+                    // 記住使用者目前正在瀏覽的是第幾天（例如 Day 2），避免背景同步完跳回 Day 1
+                    const prevDayObj = appData.days.find(d => d.id === currentDayId);
+                    const prevDayNum = prevDayObj ? getDaySortNumber(prevDayObj.label, 1) : 1;
+
                     appData.days = parsedData.days;
                     appData.items = parsedData.items;
-                    if (!appData.days.find(d => d.id === currentDayId)) {
+                    sortAppDataDaysAndItems();
+
+                    const matchedDay = appData.days.find(d => getDaySortNumber(d.label, -1) === prevDayNum);
+                    if (matchedDay) {
+                        currentDayId = matchedDay.id;
+                    } else if (!appData.days.find(d => d.id === currentDayId)) {
                         currentDayId = appData.days[0]?.id || "day1";
                     }
                     saveData(null, false);
                     renderAll();
+                    // 若手動按「同步試算表」，讀取完同時把排好序的結果寫回 Google Sheets，讓試算表本身也維持從早到晚整齊排列
+                    if (showManualToast) {
+                        pushToGoogleSheet(false);
+                    }
                     const nowStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                    setSheetSyncStatus("success", `已與 Google Sheets 同步 (${nowStr})`);
-                    if (showManualToast) showToast("✅ 已成功從 Google Sheets 載入最新行程！");
+                    setSheetSyncStatus("success", `已與 Google Sheets 同步並依時間排序 (${nowStr})`);
+                    if (showManualToast) showToast("✅ 已載入最新行程並自動按時間從早到晚排序！");
                 } else {
                     setSheetSyncStatus("success", "試算表目前為空（顯示內建預設行程）");
                     if (showManualToast) showToast("💡 試算表目前是空的，請先在設定視窗綁定 Apps Script 網址同步");
@@ -1008,7 +1104,8 @@
                 if (!rawDay && !rawTitle) return;
 
                 const dayLabel = rawDay || "Day 1";
-                const dayId = "day_" + dayLabel.replace(/\s+/g, "").toLowerCase();
+                const dayNum = getDaySortNumber(dayLabel, idx + 1);
+                const dayId = "day" + dayNum;
 
                 if (!daysMap.has(dayId)) {
                     let datePart = dayLabel;
@@ -1039,7 +1136,7 @@
                     items.push({
                         id: `sheet-item-${idx}-${Date.now()}`,
                         dayId: dayId,
-                        time: rawTime || "09:00",
+                        time: normalizeTimeStr(rawTime || "09:00"),
                         category: CATEGORY_CONFIG[rawCat] ? rawCat : "景點",
                         title: rawTitle,
                         area: rawArea,
@@ -1053,7 +1150,7 @@
                 }
             });
 
-            const days = Array.from(daysMap.values());
+            const days = Array.from(daysMap.values()).sort((a, b) => getDaySortNumber(a.label) - getDaySortNumber(b.label));
             if (days.length === 0) return null;
             return { days, items };
         }
@@ -1145,7 +1242,7 @@
             if (currentCategoryFilter !== "全部") {
                 dayItems = dayItems.filter(item => item.category === currentCategoryFilter);
             }
-            dayItems.sort((a, b) => (a.time || "").localeCompare(b.time || ""));
+            dayItems.sort((a, b) => timeToMinutes(a.time) - timeToMinutes(b.time));
 
             document.getElementById("currentDayStats").textContent =
                 currentCategoryFilter === "全部"
@@ -1250,11 +1347,21 @@
             const titleEl = document.getElementById("itemModalTitle");
             document.getElementById("itemForm").reset();
 
+            // 動態填入「所屬天數」下拉選單，並預設選中目前所在的天數頁籤
+            const daySelect = document.getElementById("itemDayId");
+            if (daySelect) {
+                daySelect.innerHTML = appData.days.map(d =>
+                    `<option value="${escapeAttr(d.id)}">${escapeHtml(d.label)}（${escapeHtml(d.date)}・${escapeHtml(d.theme)}）</option>`
+                ).join("");
+                daySelect.value = currentDayId;
+            }
+
             if (editId) {
                 const item = appData.items.find(i => i.id === editId);
                 if (!item) return;
                 titleEl.textContent = "編輯行程項目";
                 document.getElementById("editItemId").value = item.id;
+                if (daySelect) daySelect.value = item.dayId || currentDayId;
                 document.getElementById("itemTime").value = item.time || "10:00";
                 document.getElementById("itemCategory").value = item.category || "景點";
                 document.getElementById("itemTitle").value = item.title || "";
@@ -1266,8 +1373,11 @@
                 document.getElementById("itemWebUrl").value = item.webUrl || "";
                 document.getElementById("itemNotes").value = item.notes || "";
             } else {
-                titleEl.textContent = "新增本天行程項目";
+                const curDayObj = appData.days.find(d => d.id === currentDayId);
+                const dayName = curDayObj ? curDayObj.label : "本天";
+                titleEl.textContent = `新增 ${dayName} 行程項目`;
                 document.getElementById("editItemId").value = "";
+                if (daySelect) daySelect.value = currentDayId;
                 document.getElementById("itemTime").value = "10:00";
                 document.getElementById("itemCategory").value = "景點";
             }
@@ -1283,9 +1393,11 @@
             e.preventDefault();
             const editId = document.getElementById("editItemId").value;
             const rawCost = document.getElementById("itemCostAmount").value.trim();
+            const selectedDayId = document.getElementById("itemDayId")?.value || currentDayId;
 
             const payload = {
-                time: document.getElementById("itemTime").value,
+                dayId: selectedDayId,
+                time: normalizeTimeStr(document.getElementById("itemTime").value),
                 category: document.getElementById("itemCategory").value,
                 title: document.getElementById("itemTitle").value.trim(),
                 commute: document.getElementById("itemCommute").value.trim(),
@@ -1305,25 +1417,47 @@
             } else {
                 appData.items.push({
                     id: "item-" + Date.now(),
-                    dayId: currentDayId,
                     ...payload
                 });
             }
 
+            // 儲存後自動維持停留在剛剛新增/修改的那一天頁籤
+            currentDayId = selectedDayId;
+            sortAppDataDaysAndItems();
             saveData("已儲存行程！");
             closeItemModal();
-            renderDayBannerAndList();
+            renderAll();
         }
 
+        let pendingDeleteItemId = null;
+
         function deleteItem(itemId) {
-            appData.items = appData.items.filter(i => i.id !== itemId);
+            const target = appData.items.find(i => i.id === itemId);
+            if (!target) return;
+            pendingDeleteItemId = itemId;
+            const titleEl = document.getElementById("deleteConfirmItemTitle");
+            if (titleEl) {
+                titleEl.textContent = `${target.time ? target.time + ' ' : ''}${target.title || '此行程項目'}`;
+            }
+            document.getElementById("deleteConfirmModal").classList.remove("hidden");
+        }
+
+        function closeDeleteConfirmModal() {
+            pendingDeleteItemId = null;
+            document.getElementById("deleteConfirmModal").classList.add("hidden");
+        }
+
+        function confirmDeleteItem() {
+            if (!pendingDeleteItemId) return;
+            appData.items = appData.items.filter(i => i.id !== pendingDeleteItemId);
+            closeDeleteConfirmModal();
             saveData("已刪除該行程項目");
             renderDayBannerAndList();
         }
 
         function addNewDay() {
             const nextNum = appData.days.length + 1;
-            const newDayId = "day-" + Date.now();
+            const newDayId = "day" + nextNum + "_" + Date.now();
             appData.days.push({
                 id: newDayId,
                 label: `Day ${nextNum}`,
